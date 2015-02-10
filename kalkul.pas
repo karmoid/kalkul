@@ -49,6 +49,8 @@ Var Info : TSearchRec;
 begin
 if Depth>0 then
 	begin
+	//Writeln('Ajoute '+FileSpec);
+	Tree.AddPathInfo(FileSpec);
 	//Writeln('Enter '+FileSpec+' Depth:'+IntToStr(Depth));
 	If FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0 then
 	    begin

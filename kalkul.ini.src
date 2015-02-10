@@ -1,0 +1,48 @@
+; Liste des extensions a prendre en compte
+; Unknown devrait être géré en interne
+; Un flag doitr indiquer si on garde un cumul de volume par extension "Unknown"
+[Extensions]
+*Unknown=xyyyx
+Video=mp4,mov,mpeg,m4v,mkv,vob,wmv,lfv,avi,flac,flv,m2v,wma,mp4p
+Image=jpg,jpeg,psd,svg,ani,cur,ico,tif,cbr,bmp,gif,png
+Pascal=pas,dpr,pp
+Executable=exe,com,ocx,bin
+Library=dll,pbd,res
+Objet=obj,o
+Doc=pdf,epub,chm,hlp
+Office Excel=xls,xlsx
+Office Word=doc,docx
+Office Powerpoint=ppt,pptx
+OpenOffice Calc=ods
+OpenOffice Write=odt
+OpenOffice Impress=odp
+Setup=cab,msi
+ZipFile=rar,zip,7z,gz,tar
+ZipSplit=001,002,003,004,005,006,007,008,009,010,011,012,013,014,015,016,017,018,019,020,021,022,023,024,025,026,027,028,029
+Audio=mp3,wav,m4a,m3u,mp2
+Logfile=log,out
+Textfile=txt,lst,src,tmp,readme
+Java=jar,war,java
+DiskImg=iso,img,vmdk
+Batch=cmd,bat,sh,ps,ps1
+Web=html,asp,htm,json,xaml,xul
+Xml=xml,xsd
+Ruby=rb
+Config=reg,ini,cfg,inf,gitconfig
+Policy=admx,adml
+Font=ttf
+
+; Parametres qui peuvent etre surcharges par ligne de commande
+[settings]
+KeepUnknownDetails=true
+;Source=c,d,g
+Source=c
+Depth=3
+
+; Definition des increments que l'on veut conserver (Nombre de fichiers et Taille totale)
+[SizeDetails]
+Size0=1024
+Size1k=1024*1024
+Size1M=1024*1024*1024
+Size100M=100*1024*1024*1024
+

@@ -13,7 +13,7 @@ type
 
 	pPathInfo = ^TPathInfo;
 	TPathInfo = record
-		Name : String;
+		PathName : String;
 	end;
 
 	TPathTree = class
@@ -42,7 +42,7 @@ var Node1 : pPathInfo absolute Item1;
 		if Assigned(Item1) then
 			begin
 			if Assigned(Item2) then
-				Result := StrComp(@Node1.Name[1], @Node2.Name[1])
+				Result := StrComp(@Node1^.PathName[1], @Node2^.PathName[1])
 			else
 				Result := 1;
 			end
@@ -58,8 +58,8 @@ var Node1 : pPathInfo absolute Item1;
 constructor TPathTree.Create();
 	begin
 		fRoot := NewTreeElement;
-		fRoot.ItemName := '\';
-		ftree := TAVLTree.create(CompareNode);
+		fRoot^.ItemName := '\';
+		ftree := TAVLTree.create(@CompareNode);
 	end;
 
 destructor TPathTree.Destroy; 
@@ -84,21 +84,21 @@ var Current : PTreeElement;
 	LastCurrent : PTreeElement;
 	begin
 		Current := NewTreeElement;	
-		fRoot.Child := Current;
-		Current.ItemName := Value+'1';
-		Current.Parent := fRoot;
+		fRoot^.Child := Current;
+		Current^.ItemName := Value+'1';
+		Current^.Parent := fRoot;
 		LastCurrent := Current;
 
 		Current := NewTreeElement;	
-		LastCurrent.Child := Current;
-		Current.ItemName := Value+'11';
-		Current.Parent := LastCurrent;
+		LastCurrent^.Child := Current;
+		Current^.ItemName := Value+'11';
+		Current^.Parent := LastCurrent;
 		LastCurrent := Current;
 
 		Current := NewTreeElement;	
-		LastCurrent.Next := Current;
-		Current.ItemName := Value+'12';
-		Current.Parent := LastCurrent.Parent;
+		LastCurrent^.Next := Current;
+		Current^.ItemName := Value+'12';
+		Current^.Parent := LastCurrent^.Parent;
 	end;
 
 procedure TPathTree.BrowseAll;
@@ -114,24 +114,24 @@ var TreeItem : TAVLTreeNode;
 		While TreeEnum.MoveNext do
 		begin
 			TreeItem := TreeEnum.Current;
-			writeln('Item : ' + IntToStr(TreeItem.TreeDepth) + pPathInfo(TreeItem.Data).Name);
+			writeln('Item : ' + IntToStr(TreeItem.TreeDepth) + pPathInfo(TreeItem.Data)^.PathName);
 		end;
 	end;
 
 procedure TPathTree.DumpNode(Base : PTreeElement);
 	begin
-		if Assigned(Base.Parent) then
-			WriteLn(Base.ItemName + ' has parent ' + Base.Parent.ItemName)
+		if Assigned(Base^.Parent) then
+			WriteLn(Base^.ItemName + ' has parent ' + Base^.Parent^.ItemName)
 		else	
-			WriteLn(Base.ItemName + ' has no parent');
-		if Assigned(Base.Child) then
-			WriteLn(Base.ItemName + ' has children and first is ' + Base.Child.ItemName)
+			WriteLn(Base^.ItemName + ' has no parent');
+		if Assigned(Base^.Child) then
+			WriteLn(Base^.ItemName + ' has children and first is ' + Base^.Child^.ItemName)
 		else	
-			WriteLn(Base.ItemName + ' has no child');
-		if Assigned(Base.Next) then
-			WriteLn(Base.ItemName + ' has brothers and next is ' + Base.Next.ItemName)
+			WriteLn(Base^.ItemName + ' has no child');
+		if Assigned(Base^.Next) then
+			WriteLn(Base^.ItemName + ' has brothers and next is ' + Base^.Next^.ItemName)
 		else	
-			WriteLn(Base.ItemName + ' has no brother');
+			WriteLn(Base^.ItemName + ' has no brother');
 	end;
 
 procedure TPathTree.BrowseFrom(Base : PTreeElement; Level : Integer);
@@ -140,11 +140,11 @@ var Current : PTreeElement;
 		Current := Base;
 		While Assigned(Current) do
 		begin
-			WriteLn('('+IntToStr(Level)+') '+Base.ItemName);
+			WriteLn('('+IntToStr(Level)+') '+Base^.ItemName);
 			DumpNode(Base);
-			if Assigned(Base.Child) then
-				BrowseFrom(Base.Child,Level+1);
-			Current := Current.Next;	
+			if Assigned(Base^.Child) then
+				BrowseFrom(Base^.Child,Level+1);
+			Current := Current^.Next;	
 		end;		
 	end;
 
@@ -153,7 +153,7 @@ var pPI : pPathInfo;
 	begin
 		pPI := new(pPathInfo);
 		Fillchar(pPI^, SizeOf(TPathInfo), Byte(0));
-		pPI.Name := Name;
+		pPI^.PathName := Name;
 		fTree.Add(pPI);
 		Result := pPI;
 	end;

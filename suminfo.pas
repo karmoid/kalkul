@@ -1,5 +1,6 @@
 unit suminfo;
 interface
+
 type
 	TSumInformation = class
 	protected

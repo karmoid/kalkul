@@ -101,6 +101,7 @@ begin
 	Sections := TStringList.create();
 
 	IniF.ReadSectionValues(cSections[tsExtensions], Sections);
+	Ext.AddExtension('Unknown','.*');
 	for Counter := 0 to Pred(Sections.count) do
 	begin
 		Values := TStringList.create();
@@ -117,7 +118,7 @@ procedure LoadSettings();
 begin
 	SettingsDepth := IniF.ReadInteger(cSections[tsSettings],'depth', 3);
 	SettingsSrc := IniF.ReadString(cSections[tsSettings],'source', 'c');
-	SettingsKeepUDetails := IniF.ReadBool(cSections[tsSettings],'KeepUnknownDetails', False);
+	SettingsKeepUDetails := True; //IniF.ReadBool(cSections[tsSettings],'KeepUnknownDetails', False);
 end;
 
 Begin

@@ -27,6 +27,47 @@ destructor TAppParams.Destroy;
 	inherited Destroy;		
 	end;
 
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// Analyse du genre de section suivante :
+// [SizeDetails]
+// Size1k=1k
+// Size1M=1m
+// Size100M=100m
+// Size1G=1G
+// Size1T=1t
+//
+// Code de chargement (exemple)
+//
+// Var Params : TAppParams;
+//
+// Type tSections = (tsExtensions,tsDrives,tsSettings,tsSizes);
+// 
+// Const cSections : array [low(tSections)..high(tSections)] of String = (
+// 		'extensions',
+// 		'drives',
+// 		'settings',
+// 		'sizedetails');
+//
+// Params := TAppParams.create;
+// LoadUnities;
+//
+// procedure LoadUnities();
+// var Sections : TStringList;
+// 	Counter : Integer;
+
+// begin
+// 	Sections := TStringList.create();
+
+// 	IniF.ReadSectionValues(cSections[tsSizes], Sections);
+// 	for Counter := 0 to Pred(Sections.count) do
+// 	begin
+// 		Params.AddUnity(Sections.ValueFromIndex[Counter]);
+// 	end;
+// 	Sections.free;
+// end;
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 function TAppParams.EvaluateUnity(Valyou : String): UInt64;
 var Valeur : Integer;
 	Unite : UInt64;
@@ -53,6 +94,9 @@ var Valeur : Integer;
 			Result := Unite * Valeur;	
 	end;
 
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Ajout d'une unité à la liste.
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 procedure TAppParams.AddUnity(Valyou : string);
 	begin
 		fUnities.Add(Valyou);

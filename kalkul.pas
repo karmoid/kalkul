@@ -6,6 +6,7 @@ Uses
 	Classes,
 	Filekind,
 	PathTree,
+	IniMangt,
 	SysUtils,
 	StrUtils,
 	Contnrs,
@@ -18,14 +19,17 @@ Var Ext : TFileKind;
 	SettingsSrc : String;
 	SettingsDepth :Integer;
 	SettingsKeepUDetails : Boolean;
+	Params : TAppParams;
 
-Type tSections = (tsExtensions,tsDrives,tsSettings);
+Type tSections = (tsExtensions,tsDrives,tsSettings,tsSizes);
 
-Const cIniFile = 'kalkul.ini';
 Const cSections : array [low(tSections)..high(tSections)] of String = (
 		'extensions',
 		'drives',
-		'settings');
+		'settings',
+		'sizedetails');
+
+Const cIniFile = 'kalkul.ini';
 
 Const cDefaultExt : array [0..12] of String = (
 		'Unknown/xxx',
@@ -114,6 +118,21 @@ begin
 	Sections.free;
 end;
 
+procedure LoadUnities();
+var Sections : TStringList;
+	Counter : Integer;
+
+begin
+	Sections := TStringList.create();
+
+	IniF.ReadSectionValues(cSections[tsSizes], Sections);
+	for Counter := 0 to Pred(Sections.count) do
+	begin
+		Params.AddUnity(Sections.ValueFromIndex[Counter]);
+	end;
+	Sections.free;
+end;
+
 procedure LoadSettings();
 begin
 	SettingsDepth := IniF.ReadInteger(cSections[tsSettings],'depth', 3);
@@ -125,10 +144,13 @@ Begin
 	IniF := TIniFile.create(cIniFile,False);
   	Ext := TFileKind.create;
   	Tree := TPathTree.create;
+	Params := TAppParams.create;
+	
 // pas nécessaire ou obligatoire (valeur par défaut)	
 	InitializeIniFile;
 	LoadExtensions;
 	LoadSettings;
+	LoadUnities;  	
 
 	IniF.free;
 

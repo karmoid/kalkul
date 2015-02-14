@@ -1,1 +1,1 @@
-fpc kalkul.pas -Mdelphi -Px86_64 
+fpc kalkul.pas -Mobjfpc -Px86_64 

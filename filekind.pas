@@ -30,6 +30,7 @@ type
 	end; 
 
 implementation
+uses IniMangt;
 
 var Somme : UInt64;
 
@@ -128,15 +129,15 @@ var i : Integer;
 	begin
 	for i := 0 to pred(fUnknown.count) do
 		begin
-		if (fUnknown.Objects[i] as TUInt64).Value div (1024*1024)>1 then
-			WriteLn(fUnknown.ValueFromIndex[i]+' '+IntToStr((fUnknown.Objects[i] as TUInt64).Value div (1024*1024))+' Mb');		
+		if (fUnknown.Objects[i] as TUInt64).Value div (1024*1024*100)>1 then
+			WriteLn(fUnknown.ValueFromIndex[i]+' '+GetSizeHRb((fUnknown.Objects[i] as TUInt64).Value));		
 		end;
 
 	Writeln;
 	Writeln('Type:':25 , 'Size (KiB)':25,  'Size (Human)':25);
 	for i := 0 to pred(fTypes.count) do
 		Writeln(fTypes.ValueFromIndex[i]:25, (fTypes.Objects[i] as TSumInformation).Size:25,  (fTypes.Objects[i] as TSumInformation).SizeHumanReadable:25);
-	Writeln('Somme = ' + IntToStr(Somme));
+	Writeln('Somme = ' + GetSizeHRb(Somme));
 	end;
 
 end.

@@ -13,6 +13,9 @@ type
 		procedure AddUnity(Valyou : string);
 	end;
 
+function GetSizeHRb(fSize : uInt64): WideString;
+function GetSizeHRk(fSize : uInt64): WideString;
+
 implementation
 uses SysUtils;
 
@@ -103,4 +106,37 @@ procedure TAppParams.AddUnity(Valyou : string);
 		writeln('Giving '+Valyou+' I find the value '+IntToStr(EvaluateUnity(Valyou)))
 	end;
 
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Procedure interne utilitaire
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+function GetSizeHRAny(fSize : uInt64; IndexV : Integer): WideString;
+const Units : array[1..5] of string = ('','Kib','Mib','Gib','Tib');
+var index : Integer;
+	isize : UInt64;
+begin
+	index := IndexV;
+	isize := fsize;
+	while (index<=5) and (isize>1024) do
+	begin
+		index := index + 1;
+		isize := isize div 1024;	
+	end;
+	result := IntToStr(isize) + ' ' + Units[index];	
+end;
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Expression en forme Humaine
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+function GetSizeHRb(fSize : uInt64): WideString;
+begin
+	Result := GetSizeHRAny(fSize,1);
+end;
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Expression en forme Humaine
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+function GetSizeHRk(fSize : uInt64): WideString;
+begin
+	Result := GetSizeHRAny(fSize,2);
+end;
 end.

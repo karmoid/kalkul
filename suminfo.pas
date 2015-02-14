@@ -20,6 +20,7 @@ type
 
 implementation
 uses
+  IniMangt,
   SysUtils;
   
 constructor TSumInformation.Create(Name : WideString);
@@ -40,18 +41,8 @@ begin
 end;
 
 function TSumInformation.GetSizeHumanReadable(): WideString;
-const Units : array[1..4] of string = ('Kib','Mib','Gib','Tib');
-var index : Integer;
-	isize : UInt64;
 begin
-	index := 1;
-	isize := fsize;
-	while (index<=4) and (isize>1024) do
-	begin
-		index := index + 1;
-		isize := isize div 1024;	
-	end;
-	result := IntToStr(isize) + ' ' + Units[index];	
+	Result := GetSizeHRk(fSize);
 end;
 
 end.

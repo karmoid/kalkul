@@ -30,29 +30,10 @@ type
 	end; 
 
 implementation
-uses IniMangt;
+uses IniMangt,
+	 InternalTypes;
 
 var Somme : UInt64;
-
-type TUInt64 = class
-	private
-		FValue : UInt64;
-	public
-		constructor Create(Val : Cardinal);
-		property Value: UInt64 read FValue write FValue;	
-		function Add(Val : Cardinal) : UInt64;
-end;
-
-constructor TUInt64.Create(Val : Cardinal);
-	begin
-		fValue := Val;
-	end;
-
-function TUInt64.Add(Val : Cardinal): UInt64;
-	begin
-		FValue := FValue + Val;
-		Result := FValue;
-	end;	
 
 constructor TFileKind.Create();
 begin

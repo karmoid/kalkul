@@ -1,27 +1,40 @@
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// Ini management : Chargement des options de fichiers .INI
+// Permet d'exploiter les paramétres en fichier de configuration
+// et (a faire...) en overide ligne de commande
+//
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 unit IniMangt;
 interface
-uses Classes;
+uses Classes,
+	InternalTypes;
 
 type
+
 	TAppParams = class
 	private
-		fUnities : TStringList;
+		fUnities : TStringList;			// Liste des unités de regroupement
 		function EvaluateUnity(Valyou : string): UInt64;		
+		function GetNames(Index : Integer) : String;
+		procedure SetNames(Index : Integer; Value : String);
+		function GetValues(Index : Integer) : UInt64;
+		procedure SetValues(Index : Integer; Value : UInt64);
+
 	public
 		constructor Create();
 		destructor Destroy; override;
 		procedure AddUnity(Valyou : string);
+		property Names [Index : Integer] : String read GetNames write SetNames;
+		property Values [Index : Integer] : UInt64 read GetValues write SetValues;
 	end;
-
-function GetSizeHRb(fSize : uInt64): WideString;
-function GetSizeHRk(fSize : uInt64): WideString;
 
 implementation
 uses SysUtils;
 
 constructor TAppParams.Create();
 	begin
-	fUnities := TStringList.Create();		
+	fUnities := TStringList.Create();
 	end;
 
 destructor TAppParams.Destroy;
@@ -80,7 +93,7 @@ var Valeur : Integer;
 		Val(Valyou,Valeur,Pos);
 		if Pos <> 0 then
 		begin
-			write('on va tester '+lowercase(Valyou[Pos]));
+			// write('on va tester '+lowercase(Valyou[Pos]));
 			case lowercase(Valyou[Pos]) of
 				'b': Unite := 1;
 				'k': Unite := 1 << 10;
@@ -90,7 +103,7 @@ var Valeur : Integer;
 				else 
 					Unite := 0;
 			end;
-			writeln(' unite = '+IntToStr(Unite));
+			// writeln(' unite = '+IntToStr(Unite));
 		end;	
 		Val(LeftStr(Valyou,Pos-1),Valeur,Pos);
 		if (Unite>0) and (Pos = 0) then
@@ -101,42 +114,42 @@ var Valeur : Integer;
 // Ajout d'une unité à la liste.
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 procedure TAppParams.AddUnity(Valyou : string);
+var Index : Integer;	
 	begin
-		fUnities.Add(Valyou);
-		writeln('Giving '+Valyou+' I find the value '+IntToStr(EvaluateUnity(Valyou)))
+		Index := fUnities.AddObject(Valyou, TUint64.Create(EvaluateUnity(Valyou)));
+		// writeln('Giving '+Valyou+' I find the value '+IntToStr(TUint64(fUnities.Objects[Index]).value));
 	end;
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Procedure interne utilitaire
+// Expression en forme Humaine
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-function GetSizeHRAny(fSize : uInt64; IndexV : Integer): WideString;
-const Units : array[1..5] of string = ('','Kib','Mib','Gib','Tib');
-var index : Integer;
-	isize : UInt64;
+function TAppParams.GetNames(Index : Integer) : String;
 begin
-	index := IndexV;
-	isize := fsize;
-	while (index<=5) and (isize>1024) do
-	begin
-		index := index + 1;
-		isize := isize div 1024;	
-	end;
-	result := IntToStr(isize) + ' ' + Units[index];	
+	Result := fUnities[Index];
 end;
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Expression en forme Humaine
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-function GetSizeHRb(fSize : uInt64): WideString;
+procedure TAppParams.SetNames(Index : Integer; Value : String);
 begin
-	Result := GetSizeHRAny(fSize,1);
+	
 end;
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Expression en forme Humaine
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-function GetSizeHRk(fSize : uInt64): WideString;
+function TAppParams.GetValues(Index : Integer) : UInt64;
 begin
-	Result := GetSizeHRAny(fSize,2);
+	Result := TUint64(fUnities.Objects[Index]).Value;
 end;
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Expression en forme Humaine
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+procedure TAppParams.SetValues(Index : Integer; Value : UInt64);
+begin
+	
+end;
+
 end.

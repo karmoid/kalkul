@@ -21,7 +21,8 @@ type
 implementation
 uses
   IniMangt,
-  SysUtils;
+  SysUtils,
+  InternalTypes;
   
 constructor TSumInformation.Create(Name : WideString);
 begin

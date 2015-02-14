@@ -43,7 +43,7 @@ Const cDefaultExt : array [0..12] of String = (
 		'Setup/cab,msi'
 	);
 
-function ProcessTree(FileSpec : string; Depth: Integer): Integer;
+function ProcessTree(FileSpec : string; Depth: Integer): Cardinal;
 Var Info : TSearchRec;
 	Count : Longint = 0;
 begin
@@ -140,6 +140,6 @@ Begin
 	end;
 	Ext.DumpContents;
 
-	Tree.AddItems('Tests');
-	Tree.BrowseAll;
+	//Tree.AddItems('Tests');
+	//Tree.BrowseAll;
 End.

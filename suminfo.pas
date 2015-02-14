@@ -7,15 +7,15 @@ type
 
 	private
 		fname : WideString;
-		fsize : Longint;
+		fsize : UInt64;
 		function GetSizeHumanReadable(): WideString;
 	public
 		constructor Create(Name : WideString);
 		destructor Destroy; override;
-		property Size: Longint read FSize write FSize;
+		property Size: UInt64 read FSize write FSize;
 		property SizeHumanReadable: WideString read GetSizeHumanReadable;
 		property Name: WideString read FName;
-		function AddSize(Value : Integer): Integer;
+		function AddSize(Value : Cardinal): UInt64;
 	end;
 
 implementation
@@ -33,7 +33,7 @@ begin
 	inherited Destroy;	
 end;
 
-function TSumInformation.AddSize(Value : Integer): Integer;
+function TSumInformation.AddSize(Value : Cardinal): UInt64;
 begin
 	fsize := fsize + Value div 1024;
 	Result := fsize;
@@ -41,8 +41,8 @@ end;
 
 function TSumInformation.GetSizeHumanReadable(): WideString;
 const Units : array[1..4] of string = ('Kib','Mib','Gib','Tib');
-var index : integer;
-	isize : integer;
+var index : Integer;
+	isize : UInt64;
 begin
 	index := 1;
 	isize := fsize;

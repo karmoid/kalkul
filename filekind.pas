@@ -24,30 +24,30 @@ type
 		property Extension: WideString read GetExtension write SetExtension;
 		property Name: WideString read fname write fname;
 		procedure AddExtension(vname : WideString; value : WideString);
-		function AddSizeExtension(key : string; size : Integer; WithDetails: Boolean): Integer;
+		function AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean): UInt64;
 		property TypeExtension[key : string] : WideString read GetTypeExtension;
 		procedure DumpContents;
 	end; 
 
 implementation
 
-var Somme : Cardinal;
+var Somme : UInt64;
 
-type TCardinal = class
+type TUInt64 = class
 	private
-		FValue : Cardinal;
+		FValue : UInt64;
 	public
 		constructor Create(Val : Cardinal);
-		property Value: Cardinal read FValue write FValue;	
-		function Add(Val : Cardinal) : Cardinal;
+		property Value: UInt64 read FValue write FValue;	
+		function Add(Val : Cardinal) : UInt64;
 end;
 
-constructor TCardinal.Create(Val : Cardinal);
+constructor TUInt64.Create(Val : Cardinal);
 	begin
 		fValue := Val;
 	end;
 
-function TCardinal.Add(Val : Cardinal): Cardinal;
+function TUInt64.Add(Val : Cardinal): UInt64;
 	begin
 		FValue := FValue + Val;
 		Result := FValue;
@@ -72,43 +72,43 @@ end;
 
 function TFileKind.GetTypeExtension(key : string): WideString;
 begin
-	Result := fTypes.ValueFromIndex[((fHarray.items[Lowercase(key)]) as TCardinal).value];
+	Result := fTypes.ValueFromIndex[((fHarray.items[Lowercase(key)]) as TUInt64).value];
 end;
 
-function TFileKind.AddSizeExtension(key : string; size : Integer; WithDetails: Boolean): Integer;
-var i : integer;
-var Int : TCardinal;
+function TFileKind.AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean): UInt64;
+var i : Integer;
+var Int : TUInt64;
 begin
-	Int := fHarray.items[Lowercase(key)] as TCardinal;
+	Int := fHarray.items[Lowercase(key)] as TUInt64;
 	if Assigned(Int) then
 	  i := Int.Value
 	else
 	begin
 	  i := 0;
-	  writeln('Key ' + Key + ' not found. Size = '+IntToStr(Size));
+	  // writeln('Key ' + Key + ' not found. Size = '+IntToStr(Size));
 	end;
 
 	Result := (fTypes.Objects[i] as TSumInformation).AddSize(size);
 	if (i = 0) and (WithDetails) then 
 	begin
-	  	writeln('Key ' + Key + ' on ajoute Size = '+IntToStr(Size)+ ' index '+ IntToStr(i));
+	  	// writeln('Key ' + Key + ' on ajoute Size = '+IntToStr(Size)+ ' index '+ IntToStr(i));
 		if (fUnknown.IndexOf(key)=-1) then
 			fUnknown.add(key);
 		i := fUnknown.IndexOf(key);
 		if Not Assigned(fUnknown.Objects[i]) then
-			fUnknown.Objects[i] := TCardinal.Create(size)
+			fUnknown.Objects[i] := TUInt64.Create(size)
 		else
-			(fUnknown.Objects[i] as TCardinal).Add(size);
+			(fUnknown.Objects[i] as TUInt64).Add(size);
 		Somme := Somme + Size;	
 	end;
 end;
 
 procedure TFileKind.AddExtension(vname : WideString; value : WideString);
-var i : integer;
+var i : Integer;
 begin
 	i := fTypes.IndexOf(vname);
 	if i = -1 then i := fTypes.add(vname);
-	fHarray.add(Lowercase(value), TCardinal.Create(i));
+	fHarray.add(Lowercase(value), TUInt64.Create(i));
 	fTypes.Objects[i] := TSumInformation.Create(vname);
 	//Writeln('added ' + Value + ' on fTypes[' + IntToStr(i) + '] ' + Name);
 end;
@@ -128,8 +128,8 @@ var i : Integer;
 	begin
 	for i := 0 to pred(fUnknown.count) do
 		begin
-		if (fUnknown.Objects[i] as TCardinal).Value div (1024*1024)>1 then
-			WriteLn(fUnknown.ValueFromIndex[i]+' '+IntToStr((fUnknown.Objects[i] as TCardinal).Value div (1024*1024))+' Mb');		
+		if (fUnknown.Objects[i] as TUInt64).Value div (1024*1024)>1 then
+			WriteLn(fUnknown.ValueFromIndex[i]+' '+IntToStr((fUnknown.Objects[i] as TUInt64).Value div (1024*1024))+' Mb');		
 		end;
 
 	Writeln;

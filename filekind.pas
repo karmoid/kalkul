@@ -26,7 +26,8 @@ type
 		procedure AddExtension(vname : WideString; value : WideString);
 		function AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean): UInt64;
 		property TypeExtension[key : string] : WideString read GetTypeExtension;
-		procedure DumpContents;
+		procedure DumpStats;
+		procedure DumpUnknown;
 	end; 
 
 implementation
@@ -105,20 +106,25 @@ procedure TFileKind.SetExtension(value : WideString);
 	fextension := value;
 	end;
 
-procedure TFileKind.DumpContents();
+procedure TFileKind.DumpUnknown();
 var i : Integer;	
 	begin
+	Writeln;
 	for i := 0 to pred(fUnknown.count) do
 		begin
 		if (fUnknown.Objects[i] as TUInt64).Value div (1024*1024*100)>1 then
 			WriteLn(fUnknown.ValueFromIndex[i]+' '+GetSizeHRb((fUnknown.Objects[i] as TUInt64).Value));		
 		end;
+	// Writeln('Somme Unknown = ' + GetSizeHRb(Somme));
+	end;
 
+procedure TFileKind.DumpStats();
+var i : Integer;	
+	begin
 	Writeln;
 	Writeln('Type:':25 , 'Size (KiB)':25,  'Size (Human)':25);
 	for i := 0 to pred(fTypes.count) do
 		Writeln(fTypes.ValueFromIndex[i]:25, (fTypes.Objects[i] as TSumInformation).Size:25,  (fTypes.Objects[i] as TSumInformation).SizeHumanReadable:25);
-	Writeln('Somme = ' + GetSizeHRb(Somme));
 	end;
 
 end.

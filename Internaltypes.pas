@@ -16,10 +16,41 @@ end;
 
 function GetSizeHRb(fSize : uInt64): WideString;
 function GetSizeHRk(fSize : uInt64): WideString;
+function EvaluateUnity(Valyou : string): UInt64;
 
 implementation
 uses StrUtils,
 	 SysUtils;
+
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Procedure interne utilitaire
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+function EvaluateUnity(Valyou : String): UInt64;
+var Valeur : Integer;
+	Unite : UInt64;
+	Pos : Word;
+	begin
+		Result := 0;
+		Val(Valyou,Valeur,Pos);
+		if Pos <> 0 then
+		begin
+			// write('on va tester '+lowercase(Valyou[Pos]));
+			case lowercase(Valyou[Pos]) of
+				'b': Unite := 1;
+				'k': Unite := 1 << 10;
+				'm': Unite := 1 << 20;
+				'g': Unite := 1 << 30;
+				't': Unite := 1 << 40;
+				else 
+					Unite := 0;
+			end;
+			// writeln(' unite = '+IntToStr(Unite));
+		end;	
+		Val(LeftStr(Valyou,Pos-1),Valeur,Pos);
+		if (Unite>0) and (Pos = 0) then
+			Result := Unite * Valeur;	
+	end;
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Procedure interne utilitaire

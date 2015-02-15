@@ -4,48 +4,18 @@ program kalcul;
 
 Uses 
 	Classes,
-	Filekind,
 	PathTree,
 	IniMangt,
 	SysUtils,
 	StrUtils,
-	Contnrs,
-	IniFiles;
+	SpecificPath,
+	Contnrs;
 
-Var Ext : TFileKind;
-	Tree : TPathTree;
-	IniF : TIniFile;
+Var Tree : TPathTree;
 	i,imax : Integer;
-	SettingsSrc : String;
-	SettingsDepth :Integer;
-	SettingsKeepUDetails : Boolean;
 	Params : TAppParams;
 
-Type tSections = (tsExtensions,tsDrives,tsSettings,tsSizes);
-
-Const cSections : array [low(tSections)..high(tSections)] of String = (
-		'extensions',
-		'drives',
-		'settings',
-		'sizedetails');
-
 Const cIniFile = 'kalkul.ini';
-
-Const cDefaultExt : array [0..12] of String = (
-		'Unknown/xxx',
-		'Video/mp4,mov',
-		'Image/jpg,jpeg',
-		'Pascal/pas',
-		'Executable/exe,com',
-		'Library/dll',
-		'Objet/obj,o',
-		'Pdf/pdf',
-		'Office Excel/xls,xlsx',
-		'Office Word/doc,docx',
-		'OpenOffice Calc/ods',
-		'OpenOffice Write/odt',
-		'Setup/cab,msi'
-	);
 
 function ProcessTree(FileSpec : string; Depth: Integer): Cardinal;
 Var Info : TSearchRec;
@@ -55,7 +25,6 @@ if Depth>0 then
 	begin
 	//Writeln('Ajoute '+FileSpec);
 	Tree.AddPathInfo(FileSpec);
-	//Writeln('Enter '+FileSpec+' Depth:'+IntToStr(Depth));
 	If FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0 then
 	    begin
 	    Repeat
@@ -68,100 +37,44 @@ if Depth>0 then
 		        end
 		    else
 			    begin
-			    	Ext.AddSizeExtension(ExtractFileExt(Name),Size,SettingsKeepUDetails);
-			        //Write (Name:40,Size:15);
-			        //Writeln(Ext.TypeExtension[ExtractFileExt(Name)]:15);
+			    	Params.AddSizeExtension(ExtractFileExt(Name),Size,Params.SettingsKeepUDetails);
 		    	end;
 			end;
 	    Until FindNext(info)<>0;
 	    end;
 	FindClose(Info);
-	//Writeln('Exit '+FileSpec);	
 	end;
 Result := Count;
 end;
 
-procedure InitializeIniFile();
-var Counter : Integer;
-
+function PopulateTree : TPathTree;
+var i,j : Integer;
 begin
-	If not IniF.SectionExists(cSections[tsExtensions]) then
-	begin
-		for Counter := low(cDefaultExt) to high(cDefaultExt) do
+	Result := TPathTree.create;
+	for i := 0 to pred(Params.SpecificPaths.Count) do
+	with (Params.SpecificPaths.Objects[i] as TSpecificPath) do
 		begin
-			IniF.WriteString(cSections[tsExtensions],
-							 ExtractDelimited(1,cDefaultExt[Counter],['/']),
-							 ExtractDelimited(2,cDefaultExt[Counter],['/']));	
-		end;
-	end;
+			for j := 0 to Pred(Paths.Count) do
+		 		Result.AddPathInfo(Paths.ValueFromIndex[j]);
+		end; 	
 end;
 
-procedure LoadExtensions();
-var Sections : TStringList;
-	Counter, SectionIndex : Integer;
-	Values : TStringList;	
-
-begin
-	Sections := TStringList.create();
-
-	IniF.ReadSectionValues(cSections[tsExtensions], Sections);
-	Ext.AddExtension('Unknown','.*');
-	for Counter := 0 to Pred(Sections.count) do
-	begin
-		Values := TStringList.create();
-		Values.CommaText := Sections.ValueFromIndex[Counter];
-  		for SectionIndex := 0 to Pred(Values.count) do
-  		begin
-  			Ext.AddExtension(Sections.Names[Counter],'.'+Values.ValueFromIndex[SectionIndex]);
-  		end;
-	end;
-	Sections.free;
-end;
-
-procedure LoadUnities();
-var Sections : TStringList;
-	Counter : Integer;
-
-begin
-	Sections := TStringList.create();
-
-	IniF.ReadSectionValues(cSections[tsSizes], Sections);
-	for Counter := 0 to Pred(Sections.count) do
-	begin
-		Params.AddUnity(Sections.ValueFromIndex[Counter]);
-	end;
-	Sections.free;
-end;
-
-procedure LoadSettings();
-begin
-	SettingsDepth := IniF.ReadInteger(cSections[tsSettings],'depth', 3);
-	SettingsSrc := IniF.ReadString(cSections[tsSettings],'source', 'c');
-	SettingsKeepUDetails := True; //IniF.ReadBool(cSections[tsSettings],'KeepUnknownDetails', False);
-end;
-
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Main entry...
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 Begin
-	IniF := TIniFile.create(cIniFile,False);
-  	Ext := TFileKind.create;
-  	Tree := TPathTree.create;
-	Params := TAppParams.create;
-	
-// pas nécessaire ou obligatoire (valeur par défaut)	
-	InitializeIniFile;
-	LoadExtensions;
-	LoadSettings;
-	LoadUnities;  	
+	Params := TAppParams.create(cIniFile);
 
-	IniF.free;
+  	Tree := PopulateTree;
 
-	imax := WordCount(SettingsSrc,[',']);
+	imax := WordCount(Params.SettingsSrc,[',']);
 	for i := 1 to imax do
 	begin
-		Write('Processing... ' + ExtractWord(i,SettingsSrc,[','])+':\ -> ');
-		Writeln(IntToStr(ProcessTree(ExtractWord(i,SettingsSrc,[','])+':\',SettingsDepth)) + ' files');
+		Write('Processing... ' + ExtractWord(i,Params.SettingsSrc,[','])+':\ -> ');
+		Writeln(IntToStr(ProcessTree(ExtractWord(i,Params.SettingsSrc,[','])+':\',Params.SettingsDepth)) + ' files');
 	end;
-	Ext.DumpContents;
+	Params.Extensions.DumpStats;
 
-	//Tree.AddItems('Tests');
-	//Tree.BrowseAll;
+	Params.free;
+	Tree.free;
 End.

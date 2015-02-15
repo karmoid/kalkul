@@ -15,9 +15,29 @@ type
 		fPaths : TStringList;			// Liste des chemins 
 
 	public	
-
+		constructor Create(PathName : String; Paths : String);
+		destructor Destroy; Override;
+		property Paths: TStringList read FPaths;
 	end;
 
 Implementation
 
-end;	
+constructor TSpecificPath.Create(PathName : String; Paths : String);
+begin
+	fSpecificPathName := PathName;
+	fPaths := TStringList.create();
+// Important : Needed for Space in paths	
+	fPaths.Delimiter := ',';
+	fPaths.StrictDelimiter := True;
+	fPaths.Delimitedtext := Paths;
+end;
+
+destructor TSpecificPath.Destroy; 
+begin
+	// writeln(fSpecificPathName+ ' -> ' + fPaths.Commatext);
+	fPaths.free;
+	fSpecificPathName := '';	
+	inherited Destroy;
+end;
+
+end.	

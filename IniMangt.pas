@@ -8,148 +8,175 @@
 unit IniMangt;
 interface
 uses Classes,
-	InternalTypes;
+	InternalTypes,
+	Unities,
+	Filekind,
+	specificpath,
+	IniFiles;
 
 type
 
 	TAppParams = class
 	private
-		fUnities : TStringList;			// Liste des unités de regroupement
-		function EvaluateUnity(Valyou : string): UInt64;		
-		function GetNames(Index : Integer) : String;
-		procedure SetNames(Index : Integer; Value : String);
-		function GetValues(Index : Integer) : UInt64;
-		procedure SetValues(Index : Integer; Value : UInt64);
+		IniF : TIniFile;
+		fExtensions : TFileKind;
+		fUnity : TUnityList;
+		fSettingsSrc : WideString;
+		fSettingsDepth :Integer;
+		fSettingsKeepUDetails : Boolean;
+		fSpecificPaths : TStringList;
+		procedure InitializeIniFile();
+		procedure LoadExtensions();
+		procedure LoadUnities();
+		procedure LoadSettings();
+		procedure LoadSpecificPath();
 
 	public
-		constructor Create();
+		constructor Create(fName : String);
 		destructor Destroy; override;
-		procedure AddUnity(Valyou : string);
-		property Names [Index : Integer] : String read GetNames write SetNames;
-		property Values [Index : Integer] : UInt64 read GetValues write SetValues;
-	end;
+		property Unities: tUnityList read fUnity;
+		property SettingsSrc: WideString read FSettingsSrc write FSettingsSrc;
+		property SettingsDepth: Integer read FSettingsDepth write FSettingsDepth;
+		property SettingsKeepUDetails: Boolean read FSettingsKeepUDetails write FSettingsKeepUDetails;
+		property Extensions: TFileKind read FExtensions;
+		property SpecificPaths: TStringList read FSpecificPaths;
+		function AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean): UInt64;
+	end;	
 
 implementation
-uses SysUtils;
+uses StrUtils;
 
-constructor TAppParams.Create();
+Type tSections = (tsExtensions,tsDrives,tsSettings,tsSizes,tsSpecificPath);
+Const cComment = ';';
+Const cSections : array [low(tSections)..high(tSections)] of String = (
+		'extensions',
+		'drives',
+		'settings',
+		'sizedetails',
+		'specificpath');
+
+Const cDefaultExt : array [0..12] of String = (
+		'Unknown/xxx',
+		'Video/mp4,mov',
+		'Image/jpg,jpeg',
+		'Pascal/pas',
+		'Executable/exe,com',
+		'Library/dll',
+		'Objet/obj,o',
+		'Pdf/pdf',
+		'Office Excel/xls,xlsx',
+		'Office Word/doc,docx',
+		'OpenOffice Calc/ods',
+		'OpenOffice Write/odt',
+		'Setup/cab,msi'
+	);
+
+constructor TAppParams.Create(fName : String);
 	begin
-	fUnities := TStringList.Create();
+	fUnity := TUnityList.Create();
+	IniF := TIniFile.create(fName,False);
+	fExtensions := TFileKind.create;
+	fSpecificPaths := TStringList.create;
+	fSpecificPaths.OwnsObjects := True;
+// pas nécessaire ou obligatoire (valeur par défaut)	
+	InitializeIniFile;
+	LoadExtensions;
+	LoadSettings;
+	LoadUnities;
+	LoadSpecificPath;  	
 	end;
 
 destructor TAppParams.Destroy;
 	begin
-	fUnities.free;
+	// writeln(funity.DelimitedText);
+	fUnity.free;
+	writeln(fSpecificPaths.DelimitedText);
+	fSpecificPaths.free;
+	fExtensions.free;
+	IniF.free;
 	inherited Destroy;		
 	end;
 
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//
-// Analyse du genre de section suivante :
-// [SizeDetails]
-// Size1k=1k
-// Size1M=1m
-// Size100M=100m
-// Size1G=1G
-// Size1T=1t
-//
-// Code de chargement (exemple)
-//
-// Var Params : TAppParams;
-//
-// Type tSections = (tsExtensions,tsDrives,tsSettings,tsSizes);
-// 
-// Const cSections : array [low(tSections)..high(tSections)] of String = (
-// 		'extensions',
-// 		'drives',
-// 		'settings',
-// 		'sizedetails');
-//
-// Params := TAppParams.create;
-// LoadUnities;
-//
-// procedure LoadUnities();
-// var Sections : TStringList;
-// 	Counter : Integer;
+procedure TAppParams.InitializeIniFile();
+var Counter : Integer;
 
-// begin
-// 	Sections := TStringList.create();
-
-// 	IniF.ReadSectionValues(cSections[tsSizes], Sections);
-// 	for Counter := 0 to Pred(Sections.count) do
-// 	begin
-// 		Params.AddUnity(Sections.ValueFromIndex[Counter]);
-// 	end;
-// 	Sections.free;
-// end;
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-function TAppParams.EvaluateUnity(Valyou : String): UInt64;
-var Valeur : Integer;
-	Unite : UInt64;
-	Pos : Word;
+begin
+	If not IniF.SectionExists(cSections[tsExtensions]) then
 	begin
-		Result := 0;
-		Val(Valyou,Valeur,Pos);
-		if Pos <> 0 then
+		for Counter := low(cDefaultExt) to high(cDefaultExt) do
 		begin
-			// write('on va tester '+lowercase(Valyou[Pos]));
-			case lowercase(Valyou[Pos]) of
-				'b': Unite := 1;
-				'k': Unite := 1 << 10;
-				'm': Unite := 1 << 20;
-				'g': Unite := 1 << 30;
-				't': Unite := 1 << 40;
-				else 
-					Unite := 0;
-			end;
-			// writeln(' unite = '+IntToStr(Unite));
-		end;	
-		Val(LeftStr(Valyou,Pos-1),Valeur,Pos);
-		if (Unite>0) and (Pos = 0) then
-			Result := Unite * Valeur;	
+			IniF.WriteString(cSections[tsExtensions],
+							 ExtractDelimited(1,cDefaultExt[Counter],['/']),
+							 ExtractDelimited(2,cDefaultExt[Counter],['/']));	
+		end;
 	end;
+end;
 
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Ajout d'une unité à la liste.
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-procedure TAppParams.AddUnity(Valyou : string);
-var Index : Integer;	
+procedure TAppParams.LoadExtensions();
+var Sections : TStringList;
+	Counter, SectionIndex : Integer;
+	Values : TStringList;	
+
+begin
+	Sections := TStringList.create();
+
+	IniF.ReadSectionValues(cSections[tsExtensions], Sections);
+	Extensions.AddExtension('Unknown','.*');
+	for Counter := 0 to Pred(Sections.count) do
 	begin
-		Index := fUnities.AddObject(Valyou, TUint64.Create(EvaluateUnity(Valyou)));
-		// writeln('Giving '+Valyou+' I find the value '+IntToStr(TUint64(fUnities.Objects[Index]).value));
+		Values := TStringList.create();
+		Values.CommaText := Sections.ValueFromIndex[Counter];
+  		for SectionIndex := 0 to Pred(Values.count) do
+  		begin
+  			Extensions.AddExtension(Sections.Names[Counter],'.'+Values.ValueFromIndex[SectionIndex]);
+  		end;
 	end;
-
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Expression en forme Humaine
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-function TAppParams.GetNames(Index : Integer) : String;
-begin
-	Result := fUnities[Index];
+	Sections.free;
 end;
 
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Expression en forme Humaine
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-procedure TAppParams.SetNames(Index : Integer; Value : String);
+procedure TAppParams.LoadUnities();
+var Sections : TStringList;
+	Counter : Integer;
+        work : string;
+
 begin
-	
+	Sections := TStringList.create();
+
+	IniF.ReadSectionValues(cSections[tsSizes], Sections);
+	for Counter := 0 to Pred(Sections.count) do
+	begin
+        if Sections.Names[Counter][1]<>cComment then
+			fUnity.AddUnity(Sections.ValueFromIndex[Counter]);
+	end;
+	Sections.free;
 end;
 
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Expression en forme Humaine
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-function TAppParams.GetValues(Index : Integer) : UInt64;
+procedure TAppParams.LoadSettings();
 begin
-	Result := TUint64(fUnities.Objects[Index]).Value;
+	SettingsDepth := IniF.ReadInteger(cSections[tsSettings],'depth', 3);
+	SettingsSrc := IniF.ReadString(cSections[tsSettings],'source', 'c');
+	SettingsKeepUDetails := True; //IniF.ReadBool(cSections[tsSettings],'KeepUnknownDetails', False);
 end;
 
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Expression en forme Humaine
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-procedure TAppParams.SetValues(Index : Integer; Value : UInt64);
+procedure TAppParams.LoadSpecificPath();
+var Sections : TStringList;
+	Counter : Integer;
+
 begin
-	
+	Sections := TStringList.create();
+
+	IniF.ReadSectionValues(cSections[tsSpecificPath], Sections);
+	for Counter := 0 to Pred(Sections.count) do
+	begin
+		fSpecificPaths.AddObject(Sections.Names[Counter],TSpecificPath.Create(Sections.Names[Counter],Sections.ValueFromIndex[Counter]));
+	end;
+	Sections.free;
 end;
+
+function TAppParams.AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean): UInt64;
+begin
+	Result := Extensions.AddSizeExtension(key,size,WithDetails);
+end;
+
 
 end.

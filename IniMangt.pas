@@ -44,7 +44,8 @@ type
 	end;	
 
 implementation
-uses StrUtils;
+uses StrUtils,
+	 ExtensionTypes;
 
 Type tSections = (tsExtensions,tsDrives,tsSettings,tsSizes,tsSpecificPath);
 Const cComment = ';';
@@ -118,26 +119,35 @@ var Sections : TStringList;
 	Values : TStringList;	
 
 begin
-	Sections := TStringList.create();
+	try 
+		Sections := TStringList.create();
 
-	IniF.ReadSectionValues(cSections[tsExtensions], Sections);
-	Extensions.AddExtension('Unknown','.*');
-	for Counter := 0 to Pred(Sections.count) do
-	begin
-		Values := TStringList.create();
-		Values.CommaText := Sections.ValueFromIndex[Counter];
-  		for SectionIndex := 0 to Pred(Values.count) do
-  		begin
-  			Extensions.AddExtension(Sections.Names[Counter],'.'+Values.ValueFromIndex[SectionIndex]);
-  		end;
-	end;
-	Sections.free;
+		IniF.ReadSectionValues(cSections[tsExtensions], Sections);
+		Extensions.AddTypeExtension('Unknown');
+		Extensions.AddExtension('Unknown','.*');
+		for Counter := 0 to Pred(Sections.count) do
+		begin
+			Values := TStringList.create();
+			Values.CommaText := Sections.ValueFromIndex[Counter];
+			Extensions.AddTypeExtension(Sections.Names[Counter]);
+	  		for SectionIndex := 0 to Pred(Values.count) do
+	  		begin
+	  			Extensions.AddExtension(Sections.Names[Counter],'.'+Values.ValueFromIndex[SectionIndex]);
+	  		end;
+		end;
+		Sections.free;
+	except
+		on e: EExtensionTypesNotUnique do 
+		begin 
+			writeln('ExtensionType en double ! Msg->' + e.message);
+			raise;
+		end;
+	end;	
 end;
 
 procedure TAppParams.LoadUnities();
 var Sections : TStringList;
 	Counter : Integer;
-        work : string;
 
 begin
 	Sections := TStringList.create();

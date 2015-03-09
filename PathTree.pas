@@ -1,34 +1,31 @@
 Unit PathTree;
 interface
-uses AVL_tree;
+uses AVL_tree,
+	 pathinfo;
 
 type
-	pPathInfo = ^TPathInfo;
-	TPathInfo = record
-		PathName : String;
-	end;
-
 	TPathTree = class
 		private
 			fTree : TAVLTree;
 		public
 			constructor Create();
 			destructor Destroy; override;
-			function AddPathInfo(Name : String) : pPathInfo;
+			function AddPathInfo(Name : String) : TPathInfo;
 			procedure BrowseAll;
 	end;
 
 implementation
-uses SysUtils;
+uses SysUtils,
+	 typinfo;
 
 function CompareNode(Item1 : Pointer; Item2 : Pointer) : Longint;
-var Node1 : pPathInfo absolute Item1;
- 	Node2 : pPathInfo absolute Item2;
+var Node1 : TPathInfo absolute Item1;
+ 	Node2 : TPathInfo absolute Item2;
 	begin
 		if Assigned(Item1) then
 			begin
 			if Assigned(Item2) then
-				Result := StrComp(@Node1^.PathName[1], @Node2^.PathName[1])
+				Result := StrComp(@Node1.PathName[1], @Node2.PathName[1])
 			else
 				Result := 1;
 			end
@@ -48,7 +45,7 @@ constructor TPathTree.Create();
 
 destructor TPathTree.Destroy; 
 	begin
-		// BrowseAll;
+		BrowseAll;
 		ftree.free;
 	end;	
 
@@ -63,18 +60,18 @@ var TreeItem : TAVLTreeNode;
 		While TreeEnum.MoveNext do
 		begin
 			TreeItem := TreeEnum.Current;
-			writeln('Item : ' + IntToStr(TreeItem.TreeDepth) + pPathInfo(TreeItem.Data)^.PathName);
+			writeln('Item : Prof(' + IntToStr(TreeItem.TreeDepth) + 
+				    ') Path(' + TPathInfo(TreeItem.Data).PathName +
+				    ') State(' +  GetEnumName(TypeInfo(tPIState), ord(TPathInfo(TreeItem.Data).State)) + ')');
 		end;
 	end;
 
-function TPathTree.AddPathInfo(Name : String) : pPathInfo;
-var pPI : pPathInfo;
+function TPathTree.AddPathInfo(Name : String) : TPathInfo;
+var PI : TPathInfo;
 	begin
-		pPI := new(pPathInfo);
-		Fillchar(pPI^, SizeOf(TPathInfo), Byte(0));
-		pPI^.PathName := Name;
-		fTree.Add(pPI);
-		Result := pPI;
+		PI := tPathInfo.create(Name);
+		fTree.Add(PI);
+		Result := PI;
 	end;
 
 end.

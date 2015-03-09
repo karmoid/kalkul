@@ -9,6 +9,7 @@ Uses
 	SysUtils,
 	StrUtils,
 	SpecificPath,
+	pathinfo,
 	Contnrs;
 
 Var Tree : TPathTree;
@@ -20,11 +21,12 @@ Const cIniFile = 'kalkul.ini';
 function ProcessTree(FileSpec : string; Depth: Integer): Cardinal;
 Var Info : TSearchRec;
 	Count : Longint = 0;
+	PI : tPathInfo;
 begin
 if Depth>0 then
 	begin
 	//Writeln('Ajoute '+FileSpec);
-	Tree.AddPathInfo(FileSpec);
+	PI := Tree.AddPathInfo(FileSpec);
 	If FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0 then
 	    begin
 	    Repeat
@@ -38,6 +40,7 @@ if Depth>0 then
 		    else
 			    begin
 			    	Params.AddSizeExtension(ExtractFileExt(Name),Size,Params.SettingsKeepUDetails);
+			    	PI.AddSizeExtension(ExtractFileExt(Name),Size,Params.SettingsKeepUDetails)
 		    	end;
 			end;
 	    Until FindNext(info)<>0;
@@ -49,13 +52,14 @@ end;
 
 function PopulateTree : TPathTree;
 var i,j : Integer;
+var pi : tPathInfo;
 begin
 	Result := TPathTree.create;
 	for i := 0 to pred(Params.SpecificPaths.Count) do
 	with (Params.SpecificPaths.Objects[i] as TSpecificPath) do
 		begin
 			for j := 0 to Pred(Paths.Count) do
-		 		Result.AddPathInfo(Paths.ValueFromIndex[j]);
+		 		Result.AddPathInfo(Paths.ValueFromIndex[j]).State := tpisConfigured;
 		end; 	
 end;
 

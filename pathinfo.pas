@@ -17,6 +17,7 @@ type
 			property PathName: WideString read FPathName write FPathName;
 			property Sumarize: TFileKind read FSumarize write FSumarize;
 			property State: tPIState read FState write FState;
+			class function CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;			
 	end;
 
 Implementation
@@ -45,5 +46,25 @@ begin
 	// writeln('PathInfo > Ajout de '+key+' de taille '+IntToStr(size));
 	// Result := Sumarize.AddSizeExtension(key,size,WithDetails);
 end;
+
+class function TPathInfo.CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;			
+begin
+	result := -1;
+	if Assigned(Item1) then
+		begin
+		if Assigned(Item2) then
+			Result := StrComp(@Item1.PathName[1], @Item2.PathName[1])
+		else
+			Result := 1;
+		end
+	else 
+		begin
+		if Assigned(Item2) then
+			Result := -1
+		else
+			Result := 0;	
+		end;
+end;
+
 
 end.

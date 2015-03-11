@@ -22,20 +22,7 @@ function CompareNode(Item1 : Pointer; Item2 : Pointer) : Longint;
 var Node1 : TPathInfo absolute Item1;
  	Node2 : TPathInfo absolute Item2;
 	begin
-		if Assigned(Item1) then
-			begin
-			if Assigned(Item2) then
-				Result := StrComp(@Node1.PathName[1], @Node2.PathName[1])
-			else
-				Result := 1;
-			end
-		else 
-			begin
-			if Assigned(Item2) then
-				Result := -1
-			else
-				Result := 0;	
-			end;
+		Result := TPathInfo.CompareNode(Node1,Node2);
 	end;
 
 constructor TPathTree.Create();

@@ -1,6 +1,12 @@
 program kalcul;
+{ =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  Marc CHAUFFOUR - january 2015
+  Personal project - maybe used on Rooms estimates
 
-{ This program demonstrates the FindFirst function }
+  kalkul : Volume estimation / update view
+  acquire data about files : min size, max size, min modified date, max modified date, ...
+  Goals : ability to understand how the files are stored and used in each directory
+  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- }
 
 Uses 
 	Classes,
@@ -18,7 +24,7 @@ Var Tree : TPathTree;
 
 Const cIniFile = 'kalkul.ini';
 
-function ProcessTree(FileSpec : string; Depth: Integer): Cardinal;
+function ProcessTree(FileSpec : string; Depth: Integer; GroupName : String): Cardinal;
 Var Info : TSearchRec;
 	Count : Longint = 0;
 	PI : tPathInfo;
@@ -27,6 +33,12 @@ if Depth>0 then
 	begin
 	//Writeln('Ajoute '+FileSpec);
 	PI := Tree.AddPathInfo(FileSpec);
+	PI.GroupName := Params.FindGroupByPath(FileSpec);
+	if PI.GroupName = '' then
+	  PI.GroupName := GroupName
+	else
+	  GroupName := PI.GroupName;  
+
 	If FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0 then
 	    begin
 	    Repeat
@@ -35,7 +47,7 @@ if Depth>0 then
 	    	begin
 		    If (Attr and faDirectory) = faDirectory then
 		        begin
-			        if Name[1] <> '.' then Count := Count + ProcessTree(FileSpec+Name+'\',Depth-1);
+			        if Name[1] <> '.' then Count := Count + ProcessTree(FileSpec+Name+'\',Depth-1,GroupName);
 		        end
 		    else
 			    begin
@@ -56,11 +68,7 @@ var pi : tPathInfo;
 begin
 	Result := TPathTree.create;
 	for i := 0 to pred(Params.SpecificPaths.Count) do
-	with (Params.SpecificPaths.Objects[i] as TSpecificPath) do
-		begin
-			for j := 0 to Pred(Paths.Count) do
-		 		Result.AddPathInfo(Paths.ValueFromIndex[j]).State := tpisConfigured;
-		end; 	
+ 		Result.AddPathInfo(Params.SpecificPaths.Names[i]).State := tpisConfigured;
 end;
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -69,15 +77,17 @@ end;
 Begin
 	Params := TAppParams.create(cIniFile);
 
+	Params.DumpPaths;
   	Tree := PopulateTree;
-
 	imax := WordCount(Params.SettingsSrc,[',']);
 	for i := 1 to imax do
 	begin
 		Write('Processing... ' + ExtractWord(i,Params.SettingsSrc,[','])+':\ -> ');
-		Writeln(IntToStr(ProcessTree(ExtractWord(i,Params.SettingsSrc,[','])+':\',Params.SettingsDepth)) + ' files');
+		Writeln(IntToStr(ProcessTree(ExtractWord(i,Params.SettingsSrc,[','])+':\',Params.SettingsDepth,'')) + ' files');
 	end;
-	Params.Extensions.DumpStats;
+	// Params.Extensions.DumpStats;
+	// Params.DumpExtensions;
+	Params.DumpPaths;
 
 	Params.free;
 	Tree.free;

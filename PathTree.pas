@@ -22,7 +22,7 @@ function CompareNode(Item1 : Pointer; Item2 : Pointer) : Longint;
 var Node1 : TPathInfo absolute Item1;
  	Node2 : TPathInfo absolute Item2;
 	begin
-		Result := TPathInfo.CompareNode(Node1,Node2);
+		Result := AnsiCompareText(Node1.PathName,Node2.Pathname);
 	end;
 
 constructor TPathTree.Create();
@@ -38,27 +38,48 @@ destructor TPathTree.Destroy;
 
 procedure TPathTree.BrowseAll;
 var TreeEnum : TAVLTreeNodeEnumerator;	
-var TreeItem : TAVLTreeNode;
+var TreeItem,Node : TAVLTreeNode;
+var MyData : TPathInfo;
 	begin
-		writeln('\nTree ftree Report as String:');
-		WriteLn(ftree.Count:5, fTree.ReportAsString);
 		writeln('\nDump Sorted Tree ftree:');
 		TreeEnum := fTree.GetEnumerator;
 		While TreeEnum.MoveNext do
 		begin
 			TreeItem := TreeEnum.Current;
+			with TPathInfo(TreeItem.Data) do
 			writeln('Item : Prof(' + IntToStr(TreeItem.TreeDepth) + 
-				    ') Path(' + TPathInfo(TreeItem.Data).PathName +
-				    ') State(' +  GetEnumName(TypeInfo(tPIState), ord(TPathInfo(TreeItem.Data).State)) + ')');
+				    ') Path(' + PathName +
+				    ') State(' +  GetEnumName(TypeInfo(tPIState), ord(State)) + 
+				    ') Group(' + GroupName + ')');
 		end;
+		//for Node in fTree do begin
+    	//	MyData:=TPathInfo(Node.Data);
+    	//	writeln(MyData.PathName);
+    	//end;	
 	end;
 
 function TPathTree.AddPathInfo(Name : String) : TPathInfo;
 var PI : TPathInfo;
+var Node : TAVLTreeNode;
 	begin
-		PI := tPathInfo.create(Name);
-		fTree.Add(PI);
-		Result := PI;
+		try
+			PI := tPathInfo.create(Name);
+			Node := fTree.find(PI);
+			if assigned(Node) then
+			begin
+				// writeln('Find "',Name,'" give ',TPathInfo(Node.Data).PathName);
+				PI.free;
+				PI := TPathInfo(Node.Data);
+				PI.State := tpisFound;
+			end
+			else
+			begin
+				// writeln('Find "',Name,'" give nothing. Create Node');
+				Node := fTree.Add(PI);
+			end;	
+			Result := PI;
+		except on e: Exception do writeln('exception ',e.message);
+		end;	
 	end;
 
 end.

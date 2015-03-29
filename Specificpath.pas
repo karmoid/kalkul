@@ -5,20 +5,25 @@
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 unit SpecificPath;
 interface
-uses Classes;
+uses Classes,
+	SysUtils;
 
 type
 	
 	TSpecificPath = class
 	private
 		fSpecificPathName : String;		// Nom du Path Spécifique
-		fPaths : TStringList;			// Liste des chemins 
+		fPaths : TStringList;
+		fGroupName : String;			// Liste des chemins 
+		procedure SetGroupName(S : String);
 
 	public	
 		constructor Create(PathName : String; Paths : String);
 		destructor Destroy; Override;
 		property Paths: TStringList read FPaths;
+		property GroupName: String read FGroupName write SetGroupName;
 	end;
+	ESpecificPathGroupDuplicate = class(Exception);
 
 Implementation
 
@@ -37,7 +42,16 @@ begin
 	// writeln(fSpecificPathName+ ' -> ' + fPaths.Commatext);
 	fPaths.free;
 	fSpecificPathName := '';	
+	fGroupName := '';
 	inherited Destroy;
+end;
+
+procedure TSpecificPath.SetGroupName(S : String);
+begin
+	if fGroupName='' then
+		fGroupName := S
+	else
+		raise ESpecificPathGroupDuplicate.create('['+S+'] Duplicates');
 end;
 
 end.	

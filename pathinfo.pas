@@ -3,13 +3,14 @@ Interface
 uses filekind;
 
 type
-	tPIState = (tpisConfigured, tpisFound, tpisFilled);
+	tPIState = (tpisNone, tpisConfigured, tpisFound, tpisFilled);
 
 	TPathInfo = class
 		private
 			fPathName : WideString;
 			fState : tPIState;
 			fSumarize : TFileKind;
+			fGroupName : String;
 		public
 			constructor Create(PathN : WideString);
 			destructor Destroy; override;
@@ -17,16 +18,17 @@ type
 			property PathName: WideString read FPathName write FPathName;
 			property Sumarize: TFileKind read FSumarize write FSumarize;
 			property State: tPIState read FState write FState;
+			property GroupName: String read FGroupName write FGroupName;
 			class function CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;			
 	end;
 
 Implementation
-uses SysUtils;
+uses SysUtils,
+	InternalTypes;
 
 constructor TPathInfo.Create(PathN : WideString);
 begin
-	fPathName := PathN;
-	// fSumarize := TFileKind.Create();
+	fPathName := NormalizePath(PathN);
 end;
 
 destructor TPathInfo.Destroy; 
@@ -47,23 +49,9 @@ begin
 	// Result := Sumarize.AddSizeExtension(key,size,WithDetails);
 end;
 
-class function TPathInfo.CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;			
+class function TPathInfo.CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;
 begin
-	result := -1;
-	if Assigned(Item1) then
-		begin
-		if Assigned(Item2) then
-			Result := StrComp(@Item1.PathName[1], @Item2.PathName[1])
-		else
-			Result := 1;
-		end
-	else 
-		begin
-		if Assigned(Item2) then
-			Result := -1
-		else
-			Result := 0;	
-		end;
+	Result := AnsiCompareText(Item1.PathName, Item1.PathName);
 end;
 
 

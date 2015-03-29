@@ -20,7 +20,7 @@ type
 		constructor Create(); 
 		destructor Destroy; override;
 		property ExtensionType[Key : String] : String read GetExtensionType write SetExtensionType;
-		function AddExtensionType(Ext: String; ExtType: String) : Integer;
+		procedure AddExtensionType(Ext: String; ExtType: String);
 	end; 
 	EExtensionsNotUnique = class(Exception);
 
@@ -38,11 +38,10 @@ begin
 	inherited Destroy;
 end;
 
-function TExtensions.AddExtensionType(Ext: String; ExtType: string) : Integer;
+procedure TExtensions.AddExtensionType(Ext: String; ExtType: string);
 var Dup : string;
 begin
 	try
-		Result := Add(Ext);
 		Values[Ext] := ExtType;
 	except 
 		on EStringListError do 

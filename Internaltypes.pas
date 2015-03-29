@@ -17,6 +17,7 @@ end;
 function GetSizeHRb(fSize : uInt64): WideString;
 function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
+function NormalizePath(S : String) : String;
 
 implementation
 uses StrUtils,
@@ -115,6 +116,10 @@ begin
 	Result := GetSizeHRk(fValue);
 end;
 
-
+function NormalizePath(S : String) : String;
+begin
+	Result := LowerCase(S);
+	if Result[Length((Result))]<>'\' then Result := Result + '\';
+end;
 
 end.

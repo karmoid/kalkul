@@ -46,7 +46,7 @@ type
 		destructor Destroy; override;
 		procedure DumpExtensions;
 		procedure DumpPaths;
-		function AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean): UInt64;
+		function AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean; GName : String): UInt64;
 		function FindGroupByPath(S : String) : string;
 		property Unities: tUnityList read fUnity;
 		property SettingsSrc: WideString read FSettingsSrc write FSettingsSrc;
@@ -274,9 +274,11 @@ begin
 end;
 
 
-function TAppParams.AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean): UInt64;
+function TAppParams.AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean; GName : String): UInt64;
 begin
 	Result := 0; // Extensions.AddSizeExtension(key,size,WithDetails);
+	PathAndGroupManager.
+
 end;
 
 function TAppParams.FindGroupByPath(S : String) : string;

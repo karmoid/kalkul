@@ -51,8 +51,8 @@ if Depth>0 then
 		        end
 		    else
 			    begin
-			    	Params.AddSizeExtension(ExtractFileExt(Name),Size,Params.SettingsKeepUDetails);
-			    	PI.AddSizeExtension(ExtractFileExt(Name),Size,Params.SettingsKeepUDetails)
+			    	Params.AddSizeExtension(ExtractFileExt(Name),Size,Params.SettingsKeepUDetails,GroupName);
+			    	PI.AddSizeExtension(ExtractFileExt(Name),Size,Params.SettingsKeepUDetails,GroupName);
 		    	end;
 			end;
 	    Until FindNext(info)<>0;

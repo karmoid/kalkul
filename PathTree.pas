@@ -15,8 +15,7 @@ type
 	end;
 
 implementation
-uses SysUtils,
-	 typinfo;
+uses SysUtils;
 
 function CompareNode(Item1 : Pointer; Item2 : Pointer) : Longint;
 var Node1 : TPathInfo absolute Item1;
@@ -47,10 +46,10 @@ var MyData : TPathInfo;
 		begin
 			TreeItem := TreeEnum.Current;
 			with TPathInfo(TreeItem.Data) do
-			writeln('Item : Prof(' + IntToStr(TreeItem.TreeDepth) + 
-				    ') Path(' + PathName +
-				    ') State(' +  GetEnumName(TypeInfo(tPIState), ord(State)) + 
-				    ') Group(' + GroupName + ')');
+			begin
+				write('(Item : Prof(' + IntToStr(TreeItem.TreeDepth) + ') ');
+				dumpData;			
+			end;
 		end;
 		//for Node in fTree do begin
     	//	MyData:=TPathInfo(Node.Data);

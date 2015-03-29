@@ -4,6 +4,7 @@ interface
 
 uses classes,
 	 sysUtils,
+//	 DirectoryStat,
 	 ExtensionTypeManager;
 
 type
@@ -11,7 +12,7 @@ type
 	protected
 		// (object associé) mysuminfo : Tsuminfo;
 	private
-		fReference : TStringList;	
+		fReference : TStringList;
 		function GetGroupName(Key : String) : String;
 		procedure SetGroupName(Key : String; value : String);
 	public	

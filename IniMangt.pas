@@ -277,7 +277,7 @@ end;
 function TAppParams.AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean; GName : String): UInt64;
 begin
 	Result := 0; // Extensions.AddSizeExtension(key,size,WithDetails);
-	PathAndGroupManager.
+	//PathAndGroupManager.
 
 end;
 

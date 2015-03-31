@@ -77,7 +77,7 @@ end;
 Begin
 	Params := TAppParams.create(cIniFile);
 
-	Params.DumpPaths;
+	//Params.DumpPaths;
   	Tree := PopulateTree;
 	imax := WordCount(Params.SettingsSrc,[',']);
 	for i := 1 to imax do
@@ -87,7 +87,8 @@ Begin
 	end;
 	// Params.Extensions.DumpStats;
 	// Params.DumpExtensions;
-	Params.DumpPaths;
+	//Params.DumpPaths;
+	Params.DumpExtType;
 
 	Params.free;
 	Tree.free;

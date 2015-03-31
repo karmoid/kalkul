@@ -20,6 +20,7 @@ type TPathsAndGroupsManager = class
 		procedure AddSpecificPathName(S : String);		
 		procedure AddSpecificPath(S: string);
 		function FindGroupByPath(S : String) : string;
+		function GetExtensionType(key : string; GName : String): String;
 
 		property Paths: TSpecificPaths read fPaths;
 		property PathNames: TSpecificPaths read fPathNames;
@@ -30,7 +31,8 @@ type TPathsAndGroupsManager = class
 	ESpecificPathNotSet = class(Exception);
 
 implementation
-uses InternalTypes;
+uses InternalTypes,
+	ExtensionTypeManager;
 
 constructor TPathsAndGroupsManager.Create();
 begin
@@ -102,5 +104,15 @@ begin
 	  Result := PathNames.Values[PathName];
 end;
 
+function TPathsAndGroupsManager.GetExtensionType(key : string; GName : String): String;
+var Extensions : TExtensionTypeManager;
+begin
+	Result := '';
+	if GName<>'' then
+	begin
+		Extensions := Groups.ExtensionTypeMan(GName);
+		Result := Extensions.GetExtensionType(Key);
+	end;
+end;
 
 end.

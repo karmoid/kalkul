@@ -30,6 +30,7 @@ type
 		//fSpecificPaths : TStringList;
 		fExtensionTypeManager : TExtensionTypeManager;
 		fPathAndGroupManager : TPathsAndGroupsManager;
+		fReportExtType : TStringList;
 		procedure InitializeIniFile();
 		procedure LoadExtensions();
 		procedure LoadUnities();
@@ -46,6 +47,7 @@ type
 		destructor Destroy; override;
 		procedure DumpExtensions;
 		procedure DumpPaths;
+		procedure DumpExtType();
 		function AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean; GName : String): UInt64;
 		function FindGroupByPath(S : String) : string;
 		property Unities: tUnityList read fUnity;
@@ -58,7 +60,8 @@ type
 
 implementation
 uses StrUtils,
-	 ExtensionTypes;
+	 ExtensionTypes,
+	 DirectoryStat;
 
 Type tSections = (tsExtensions,tsDrives,tsSettings,tsSizes,tsSpecificPath,tsSpecificGroup,tsGroupOptions);
 Const cComment = ';';
@@ -96,6 +99,10 @@ constructor TAppParams.Create(fName : String);
 	//fSpecificPaths.OwnsObjects := True;
 	fExtensionTypeManager := TExtensionTypeManager.Create();
 	fPathAndGroupManager := TPathsAndGroupsManager.create();
+	fReportExtType := TStringList.create();
+	fReportExtType.Duplicates := dupError;
+	fReportExtType.OwnsObjects := True;
+	fReportExtType.Sorted := True;	
 
 // pas nécessaire ou obligatoire (valeur par défaut)	
 	InitializeIniFile;
@@ -116,6 +123,7 @@ destructor TAppParams.Destroy;
 	IniF.free;
 	fExtensionTypeManager.free;
 	fPathAndGroupManager.free;
+	fReportExtType.free;
 	inherited Destroy;		
 	end;
 
@@ -275,10 +283,25 @@ end;
 
 
 function TAppParams.AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean; GName : String): UInt64;
+var ExtType : String;
+var Obj : TDirectoryStat;
+var i : integer;
 begin
 	Result := 0; // Extensions.AddSizeExtension(key,size,WithDetails);
-	//PathAndGroupManager.
-
+	ExtType := PathAndGroupManager.GetExtensionType(Key,GName);
+	if ExtType='' then
+		ExtType := ExtensionTypeManager.GetExtensionType(Key);
+	if ExtType='' then
+		ExtType := '*any*';
+	i := fReportExtType.indexOf(ExtType);
+	if i=-1 then
+	begin
+		obj := TDirectoryStat.Create;
+		fReportExtType.AddObject(ExtType,obj);
+	end
+	else
+		obj := fReportExtType.Objects[i] as TDirectoryStat;
+	Result := obj.Size.Add(Size);
 end;
 
 function TAppParams.FindGroupByPath(S : String) : string;
@@ -294,6 +317,15 @@ end;
 procedure TAppParams.DumpPaths();
 begin
 	PathAndGroupManager.DumpPathsAndGroups();	
+end;
+
+procedure TAppParams.DumpExtType();
+var i : integer;	
+begin
+	writeln('Type extension':25,' = ','Taille':25);
+	for i:= 0 to pred(fReportExtType.count) do
+	with fReportExtType.Objects[i] as TDirectoryStat do
+		writeln(fReportExtType[i]:25,' = ',Size.FromByteToHR:25);
 end;
 
 function TAppParams.GetSpecificPaths : TSpecificPaths;

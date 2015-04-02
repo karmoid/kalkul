@@ -31,7 +31,7 @@ constructor TPathTree.Create();
 
 destructor TPathTree.Destroy; 
 	begin
-		//BrowseAll;
+		BrowseAll;
 		ftree.free;
 	end;	
 

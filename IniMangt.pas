@@ -14,7 +14,8 @@ uses Classes,
 	ExtensionTypeManager,
 	PathsAndGroupsManager,
 	SpecificPaths,	
-	specificpath,
+	Specificpath,
+	SysUtils,
 	IniFiles;
 
 type
@@ -48,7 +49,7 @@ type
 		procedure DumpExtensions;
 		procedure DumpPaths;
 		procedure DumpExtType();
-		function AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean; GName : String): UInt64;
+		function AddSizeExtension(key : string; info : TSearchRec; WithDetails: Boolean; GName : String): UInt64;
 		function FindGroupByPath(S : String) : string;
 		property Unities: tUnityList read fUnity;
 		property SettingsSrc: WideString read FSettingsSrc write FSettingsSrc;
@@ -282,7 +283,7 @@ begin
 end;
 
 
-function TAppParams.AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean; GName : String): UInt64;
+function TAppParams.AddSizeExtension(key : string; info : TSearchRec; WithDetails: Boolean; GName : String): UInt64;
 var ExtType : String;
 var Obj : TDirectoryStat;
 var i : integer;
@@ -301,7 +302,7 @@ begin
 	end
 	else
 		obj := fReportExtType.Objects[i] as TDirectoryStat;
-	Result := obj.Size.Add(Size);
+	Result := obj.Size.Add(info.Size);
 end;
 
 function TAppParams.FindGroupByPath(S : String) : string;

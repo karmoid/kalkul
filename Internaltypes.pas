@@ -1,5 +1,7 @@
 unit InternalTypes;
 interface
+uses Windows,
+	SysUtils;
 
 type TUInt64 = class
 	private
@@ -14,14 +16,121 @@ type TUInt64 = class
 		property FromKByteToHR : String Read GetFromKByteToHR;
 end;
 
+type TFileInfo = class
+	private
+		fnbfile : UInt64;
+		fminsize, fmaxsize, ftotalsize : UInt64;
+		fminCreateDT, fminAccessDT, fminModifyDT: TDateTime;
+		fmaxCreateDT, fmaxAccessDT, fmaxModifyDT: TDateTime;
+		function FileTimeToDTime(FTime: TFileTime): TDateTime;
+		Procedure ExploitInfo(Info : TSearchRec; var CDT,ADT,MDT : TDateTime; var SZ : UInt64);
+		Procedure SetMinMaxDate(SDate : TDateTime; var Mindate, maxDate : TDateTime);
+		function SetNewSize(SZ : UInt64) : uInt64;
+	public
+		constructor Create;
+		function TakeAccount(Info : TSearchRec) : uInt64;
+		function GetData : string;
+		property nbfile: uInt64 read Fnbfile write Fnbfile;
+		property minSize: UInt64 read FMinSize write FMinSize;	
+		property MaxSize: UInt64 read FMaxSize write FMaxSize;	
+		property TotalSize: UInt64 read FTotalSize write FTotalSize;	
+		property MinCreateDT: TDateTime read FMinCreateDT write FMinCreateDT;
+		property MinAccessDT: TDateTime read FMinAccessDT write FMinAccessDT;
+		property MinModifyDT: TDateTime read FMinModifyDT write FMinModifyDT;
+		property MaxCreateDT: TDateTime read FMaxCreateDT write FMaxCreateDT;
+		property MaxAccessDT: TDateTime read FMaxAccessDT write FMaxAccessDT;
+		property MaxModifyDT: TDateTime read FMaxModifyDT write FMaxModifyDT;
+	end;
+
 function GetSizeHRb(fSize : uInt64): WideString;
 function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
 function NormalizePath(S : String) : String;
+// function FileTimeToDTime(FTime: TFileTime): TDateTime;
 
 implementation
-uses StrUtils,
-	 SysUtils;
+uses StrUtils;
+
+constructor Tfileinfo.Create;
+begin
+	fMinCreateDT := maxDateTime;	
+	fMinAccessDT := maxDateTime;	
+	fMinModifyDT := maxDateTime;	
+	fMaxCreateDT := minDateTime;	
+	fMaxAccessDT := minDateTime;	
+	fMaxModifyDT := minDateTime;
+	fmaxsize := 0;
+	fminsize := high(uInt64);
+	fnbfile := 0;
+	ftotalsize := 0;
+end;
+
+Procedure TFileInfo.ExploitInfo(Info : TSearchRec; var CDT,ADT,MDT : TDateTime; var SZ : UInt64);
+begin
+	with info do
+	begin
+		CDT := FileTimeToDTime(FindData.ftCreationTime);
+		ADT := FileTimeToDTime(FindData.ftLastAccessTime);
+		MDT := FileTimeToDTime(FindData.ftLastWriteTime);
+		SZ := Size;
+	end;	
+end;
+
+function Tfileinfo.GetData : string;
+begin
+	Result := 'MinCD:'+DateTimeToStr(MinCreateDT)+', '+
+			  'MaxCD:'+DateTimeToStr(MaxCreateDT)+', '+
+			  'MinAD:'+DateTimeToStr(MinAccessDT)+', '+
+			  'MaxAD:'+DateTimeToStr(MaxAccessDT)+', '+
+			  'MinMD:'+DateTimeToStr(MinModifyDT)+', '+
+			  'MaxMD:'+DateTimeToStr(MaxModifyDT)+', '+
+			  'NbF:'+IntToStr(nbfile)+', '+
+			  'minSize:'+GetSizeHRb(minSize)+', '+
+			  'maxSize:'+GetSizeHRb(maxSize)+', '+
+			  'TotalSize:'+GetSizeHRb(TotalSize);
+end;
+
+
+function TFileInfo.SetNewSize(SZ : UInt64) : uInt64;
+begin
+	TotalSize := TotalSize + SZ;
+	if SZ<minSize then
+		minSize := SZ;
+	if SZ>MaxSize then
+		MaxSize := SZ;
+	result := TotalSize;	
+end;
+
+Procedure TFileInfo.SetMinMaxDate(SDate : TDateTime; var Mindate, maxDate : TDateTime);
+begin
+	if SDate>maxDate then
+		maxDate := SDate;
+	if SDate<Mindate then
+		Mindate := SDate;	
+end;
+
+function TFileInfo.TakeAccount(Info : TSearchRec) : uInt64;
+var CDT,ADT,MDT : TDateTime;
+var SZ : UInt64;
+begin
+	with info do
+		ExploitInfo(info, CDT,ADT,MDT,SZ);
+	nbfile := nbfile + 1;	
+	SetMinMaxDate(CDT,fMinCreateDT,fMaxCreateDT);
+	SetMinMaxDate(ADT, fMinAccessDT,fmaxAccessDT);
+	SetMinMaxDate(MDT,fminModifyDT,fmaxModifyDT);
+	Result := SetNewSize(SZ);
+end;
+
+function TFileInfo.FileTimeToDTime(FTime: TFileTime): TDateTime;
+var
+  LocalFTime: TFileTime;
+  STime: TSystemTime;
+begin
+  FileTimeToLocalFileTime(FTime, LocalFTime);
+  FileTimeToSystemTime(LocalFTime, STime);
+  Result := SystemTimeToDateTime(STime);
+end;
 
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

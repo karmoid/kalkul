@@ -1,7 +1,9 @@
 Unit PathInfo;
 Interface
 uses DirectoryStat,
-     filekind;
+     filekind,
+     SysUtils,
+     InternalTypes;
 
 type
 	tPIState = (tpisNone, tpisConfigured, tpisFound, tpisFilled);
@@ -16,7 +18,7 @@ type
 		public
 			constructor Create(PathN : WideString);
 			destructor Destroy; override;
-			function AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean; GName : String): UInt64;
+			function AddSizeExtension(key : string; info : TSearchRec; WithDetails: Boolean; GName : String): UInt64;
 			procedure dumpData();
 			class function CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;			
 			property PathName: WideString read FPathName write FPathName;
@@ -27,9 +29,7 @@ type
 	end;
 
 Implementation
-uses SysUtils,
-	 InternalTypes,
-	 typinfo;
+uses typinfo;
 
 constructor TPathInfo.Create(PathN : WideString);
 begin
@@ -45,7 +45,7 @@ begin
 	inherited Destroy;	
 end;
 
-function TPathInfo.AddSizeExtension(key : string; size : Cardinal; WithDetails: Boolean; GName : String): UInt64;
+function TPathInfo.AddSizeExtension(key : string; info : TSearchRec; WithDetails: Boolean; GName : String): UInt64;
 begin
 	// ATTENTION : Avant de pouvoir ajouter les différents cumuls par extension
 	// il va falloir trouver un moyen pour avoir un tableau de structure
@@ -54,7 +54,9 @@ begin
 	// a étudier - 07 mars 2015 - C.m.
 	// writeln('PathInfo > Ajout de '+key+' de taille '+IntToStr(size));
 	// Result := Sumarize.AddSizeExtension(key,size,WithDetails);
-	fDirStats.size.add(size);
+	Result := fDirStats.size.add(info.size);
+	fDirStats.AddFileStat(Info,Gname);
+
 end;
 
 class function TPathInfo.CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;
@@ -63,10 +65,13 @@ begin
 end;
 
 procedure TPathInfo.dumpData();
+var i : integer;
 begin
 	writeln('Path(' + PathName +
 		    ') State(' +  GetEnumName(TypeInfo(tPIState), ord(State)) + 
 		    ') Group(' + GroupName + ') Size(' + DirStats.Size.FromByteToHR +')');
+	for i:= 0 to Pred(fDirStats.count) do
+		writeln(fDirStats.FileInfoFromIndex[i].GetData);
 end;
 
 end.

@@ -12,11 +12,12 @@ Uses
 	Classes,
 	PathTree,
 	IniMangt,
-	SysUtils,
 	StrUtils,
 	SpecificPath,
 	pathinfo,
-	Contnrs;
+	Contnrs,
+	SysUtils,
+	InternalTypes;
 
 Var Tree : TPathTree;
 	i,imax : Integer;
@@ -51,8 +52,8 @@ if Depth>0 then
 		        end
 		    else
 			    begin
-			    	Params.AddSizeExtension(ExtractFileExt(Name),Size,Params.SettingsKeepUDetails,GroupName);
-			    	PI.AddSizeExtension(ExtractFileExt(Name),Size,Params.SettingsKeepUDetails,GroupName);
+			    	Params.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
+			    	PI.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
 		    	end;
 			end;
 	    Until FindNext(info)<>0;

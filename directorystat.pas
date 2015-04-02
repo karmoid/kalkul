@@ -39,12 +39,12 @@ end;
 
 function tDirectoryStat.GetGroupName(Index : Integer) : String;
 begin
-	Result := ValueFromIndex[Index];
+	Result := Strings[Index];
 end;
 
 procedure tDirectoryStat.SetGroupName(Index : Integer; S : String);
 begin
-	ValueFromIndex[Index] := S;
+	Strings[Index] := S;
 end;
 
 function tDirectoryStat.GetFileInfoFromIndex(Index : Integer) : tFileInfo;

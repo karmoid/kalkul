@@ -71,7 +71,7 @@ begin
 		    ') State(' +  GetEnumName(TypeInfo(tPIState), ord(State)) + 
 		    ') Group(' + GroupName + ') Size(' + DirStats.Size.FromByteToHR +')');
 	for i:= 0 to Pred(fDirStats.count) do
-		writeln(fDirStats.FileInfoFromIndex[i].GetData);
+		writeln(GroupName[i],':',fDirStats.FileInfoFromIndex[i].GetData);
 end;
 
 end.

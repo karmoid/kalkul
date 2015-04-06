@@ -25,20 +25,20 @@ Var Tree : TPathTree;
 
 Const cIniFile = 'kalkul.ini';
 
-function ProcessTree(FileSpec : string; Depth: Integer; GroupName : String): Cardinal;
+function ProcessTree(Src, FileSpec : string; Depth: Integer; GroupName : String): Cardinal;
 Var Info : TSearchRec;
 	Count : Longint = 0;
+	TypeExt : String;
 	PI : tPathInfo;
+	WGpName : String;
 begin
 if Depth>0 then
 	begin
 	//Writeln('Ajoute '+FileSpec);
 	PI := Tree.AddPathInfo(FileSpec);
-	PI.GroupName := Params.FindGroupByPath(FileSpec);
-	if PI.GroupName = '' then
-	  PI.GroupName := GroupName
-	else
-	  GroupName := PI.GroupName;  
+	WGpName := Params.FindGroupByPath(FileSpec);
+	if WGpName <> '' then
+	  GroupName := WGpName;
 
 	If FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0 then
 	    begin
@@ -48,12 +48,20 @@ if Depth>0 then
 	    	begin
 		    If (Attr and faDirectory) = faDirectory then
 		        begin
-			        if Name[1] <> '.' then Count := Count + ProcessTree(FileSpec+Name+'\',Depth-1,GroupName);
+			        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec+Name+'\',Depth-1,GroupName);
 		        end
 		    else
 			    begin
-			    	Params.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
-			    	PI.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
+			    	// remplacer Ext par ExtractFileExt(Info.Name)
+			    	// Params.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
+			    	// PI Gère un Item
+			    	TypeExt := Params.GetExtensionType(lowerCase(ExtractFileExt(Info.Name)),GroupName);
+			    	//Writeln('TypeExtension de ',lowerCase(ExtractFileExt(Info.Name)),',',GroupName,' = ',TypeExt);
+			    	//if GroupName<>'' then
+			    	//	Writeln('TypeExt = [',TypeExt,'] pour ',lowerCase(ExtractFileExt(Info.Name)),' dans ',GroupName);
+			    	PI.AddSizeExtension(Info,TypeExt);
+			    	Params.SourceSet.AddSizeFromInfo(Info,TypeExt,Src); // gère x Items
+			    	Params.GroupSet.AddSizeFromInfo(Info,TypeExt,GroupName); // gère x Items
 		    	end;
 			end;
 	    Until FindNext(info)<>0;
@@ -75,6 +83,7 @@ end;
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Main entry...
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+var Src : String;
 Begin
 	Params := TAppParams.create(cIniFile);
 
@@ -83,13 +92,19 @@ Begin
 	imax := WordCount(Params.SettingsSrc,[',']);
 	for i := 1 to imax do
 	begin
-		Write('Processing... ' + ExtractWord(i,Params.SettingsSrc,[','])+':\ -> ');
-		Writeln(IntToStr(ProcessTree(ExtractWord(i,Params.SettingsSrc,[','])+':\',Params.SettingsDepth,'')) + ' files');
+		Src := ExtractWord(i,Params.SettingsSrc,[',']);
+		Write('Processing... ' + Src + ':\ -> ');
+		Writeln(IntToStr(ProcessTree(Src,ExtractWord(i,Params.SettingsSrc,[','])+':\',Params.SettingsDepth,'')) + ' files');
 	end;
 	// Params.Extensions.DumpStats;
 	// Params.DumpExtensions;
 	//Params.DumpPaths;
 	Params.DumpExtType;
+	Writeln('SOURCES:');
+	Params.SourceSet.DumpData;
+	Writeln('GROUPES:');
+	Params.GroupSet.DumpData;
+
 
 	Params.free;
 	Tree.free;

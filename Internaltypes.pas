@@ -78,7 +78,10 @@ end;
 
 function Tfileinfo.GetData : string;
 begin
-	Result := 'MinCD:'+DateTimeToStr(MinCreateDT)+', '+
+	if nbfile=0 then
+		Result := 'NbF:0'
+	else	
+		Result := 'MinCD:'+DateTimeToStr(MinCreateDT)+', '+
 			  'MaxCD:'+DateTimeToStr(MaxCreateDT)+', '+
 			  'MinAD:'+DateTimeToStr(MinAccessDT)+', '+
 			  'MaxAD:'+DateTimeToStr(MaxAccessDT)+', '+

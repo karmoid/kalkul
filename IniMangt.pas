@@ -15,6 +15,7 @@ uses Classes,
 	PathsAndGroupsManager,
 	SpecificPaths,	
 	Specificpath,
+	FileInfoSet,
 	SysUtils,
 	IniFiles;
 
@@ -32,6 +33,8 @@ type
 		fExtensionTypeManager : TExtensionTypeManager;
 		fPathAndGroupManager : TPathsAndGroupsManager;
 		fReportExtType : TStringList;
+		fSourceSet : tFileInfoSet;
+		fGroupSet : tFileInfoSet;
 		procedure InitializeIniFile();
 		procedure LoadExtensions();
 		procedure LoadUnities();
@@ -51,12 +54,16 @@ type
 		procedure DumpExtType();
 		function AddSizeExtension(key : string; info : TSearchRec; WithDetails: Boolean; GName : String): UInt64;
 		function FindGroupByPath(S : String) : string;
+		function GetExtensionType(Ext : String; GName : string) : string;
 		property Unities: tUnityList read fUnity;
 		property SettingsSrc: WideString read FSettingsSrc write FSettingsSrc;
 		property SettingsDepth: Integer read FSettingsDepth write FSettingsDepth;
 		property SettingsKeepUDetails: Boolean read FSettingsKeepUDetails write FSettingsKeepUDetails;
 		property Extensions: TFileKind read FExtensions;
 		property SpecificPaths: TSpecificPaths read GetSpecificPaths;
+		property SourceSet : tFileInfoSet read fSourceSet;
+		property GroupSet : tFileInfoSet read fGroupSet;
+
 	end;	
 
 implementation
@@ -104,6 +111,8 @@ constructor TAppParams.Create(fName : String);
 	fReportExtType.Duplicates := dupError;
 	fReportExtType.OwnsObjects := True;
 	fReportExtType.Sorted := True;	
+	fSourceSet := tFileInfoSet.create;
+	fGroupSet := tFileInfoSet.create;
 
 // pas nécessaire ou obligatoire (valeur par défaut)	
 	InitializeIniFile;
@@ -125,6 +134,8 @@ destructor TAppParams.Destroy;
 	fExtensionTypeManager.free;
 	fPathAndGroupManager.free;
 	fReportExtType.free;
+	fGroupSet.free;
+	fSourceSet.free;
 	inherited Destroy;		
 	end;
 
@@ -332,6 +343,13 @@ end;
 function TAppParams.GetSpecificPaths : TSpecificPaths;
 begin
 	Result := PathAndGroupManager.Paths;
+end;
+
+function TAppParams.GetExtensionType(Ext : String; GName : string) : string;
+begin
+	Result := PathAndGroupManager.GetExtensionType(Ext,GName);
+	if Result = '' then
+		Result := ExtensionTypeManager.GetExtensionType(Ext);
 end;
 
 

@@ -9,17 +9,18 @@ type
 	tDirectoryStat = class(tStringList)
 	private	
 		fSize : TUInt64;
-		function GetGroupName(Index : Integer) : String;
-		procedure SetGroupName(Index : Integer; S : String);
+		function GetTypeExtension(Index : Integer) : String;
+		procedure SetTypeExtension(Index : Integer; S : String);
 		function GetFileInfoFromIndex(Index : Integer) : tFileInfo;
 		function GetFileInfo(S : String) : tFileInfo;
 
 	public
 		constructor Create();
 		destructor Destroy; override;
-		function AddFileStat(info : TSearchRec; GName : String): UInt64;
+		function AddFileStat(info : TSearchRec; TypeExt : String): UInt64;
+		procedure DumpData;
 		property Size: TUInt64 read FSize write FSize;
-		property GroupName[Index : integer] : String read GetGroupName write SetGroupName;
+		property TypeExtension[Index : integer] : String read GetTypeExtension write SetTypeExtension;
 		property FileInfoFromIndex [Index : integer] : tFileInfo read GetFileInfoFromIndex;
 		property FileInfo [S : String] : tFileInfo read GetFileInfo;
 	end;
@@ -37,12 +38,12 @@ begin
 	inherited Destroy;	
 end;
 
-function tDirectoryStat.GetGroupName(Index : Integer) : String;
+function tDirectoryStat.GetTypeExtension(Index : Integer) : String;
 begin
 	Result := Strings[Index];
 end;
 
-procedure tDirectoryStat.SetGroupName(Index : Integer; S : String);
+procedure tDirectoryStat.SetTypeExtension(Index : Integer; S : String);
 begin
 	Strings[Index] := S;
 end;
@@ -62,17 +63,27 @@ begin
 		Result := nil;	
 end;
 
-function tDirectoryStat.AddFileStat(info : TSearchRec; GName : String): UInt64;
+function tDirectoryStat.AddFileStat(info : TSearchRec; TypeExt : String): UInt64;
 var FInfo : tFileInfo;
+var i : integer;
 begin
-	FInfo := FileInfo[GName];
+	if TypeExt='' then
+		TypeExt := '_n/a_';
+	FInfo := FileInfo[TypeExt];
 	if not assigned(FInfo) then
 	begin
 		FInfo := tFileInfo.Create;
-		AddObject(GName,FInfo);
+		i := AddObject(TypeExt,FInfo);
+		// writeln('added [',i,'] TypeExt=',TypeExt);
 	end;
 	FInfo.TakeAccount(info);
 end;
 
+procedure tDirectoryStat.DumpData;
+var i : Integer;	
+begin
+	for i:=0 to pred(count) do
+		writeln('  TypeExt[',i,'] ',Strings[i],':>',FileInfoFromIndex[i].GetData);
+end;
 
 end.

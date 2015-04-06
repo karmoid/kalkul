@@ -84,6 +84,7 @@ end;
 // Main entry...
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 var Src : String;
+var srcfile : TextFile;
 Begin
 	Params := TAppParams.create(cIniFile);
 
@@ -101,9 +102,13 @@ Begin
 	//Params.DumpPaths;
 	Params.DumpExtType;
 	Writeln('SOURCES:');
-	Params.SourceSet.DumpData;
+	writeln(Params.SourceSet.GetJSON);
+	assignfile(srcfile, 'sources.json');
+	rewrite(srcfile);
+	Writeln(srcfile,Params.SourceSet.GetJSON);
+	closefile(srcfile);
 	Writeln('GROUPES:');
-	Params.GroupSet.DumpData;
+	writeln(Params.GroupSet.GetJSON);
 
 
 	Params.free;

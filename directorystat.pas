@@ -19,6 +19,7 @@ type
 		destructor Destroy; override;
 		function AddFileStat(info : TSearchRec; TypeExt : String): UInt64;
 		procedure DumpData;
+		function GetJSON() : AnsiString;
 		property Size: TUInt64 read FSize write FSize;
 		property TypeExtension[Index : integer] : String read GetTypeExtension write SetTypeExtension;
 		property FileInfoFromIndex [Index : integer] : tFileInfo read GetFileInfoFromIndex;
@@ -85,5 +86,16 @@ begin
 	for i:=0 to pred(count) do
 		writeln('  TypeExt[',i,'] ',Strings[i],':>',FileInfoFromIndex[i].GetData);
 end;
+
+function tDirectoryStat.GetJSON() : AnsiString;
+var i : integer;
+begin
+	Result := '"DirStat" : [';
+	for i:=0 to pred(count) do
+		Result := Result + '{ "TypeExtName" : "' + Strings[i] +'", '+
+		          FileInfoFromIndex[i].GetJSON + '}' + VirguleLast[i<>pred(count)];
+	Result := Result + ']'
+end;
+
 
 end.

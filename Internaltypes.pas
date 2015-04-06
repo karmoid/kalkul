@@ -30,6 +30,7 @@ type TFileInfo = class
 		constructor Create;
 		function TakeAccount(Info : TSearchRec) : uInt64;
 		function GetData : string;
+		function GetJSON : AnsiString;
 		property nbfile: uInt64 read Fnbfile write Fnbfile;
 		property minSize: UInt64 read FMinSize write FMinSize;	
 		property MaxSize: UInt64 read FMaxSize write FMaxSize;	
@@ -46,7 +47,8 @@ function GetSizeHRb(fSize : uInt64): WideString;
 function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
 function NormalizePath(S : String) : String;
-// function FileTimeToDTime(FTime: TFileTime): TDateTime;
+
+const virguleLast : array[Boolean] of string = ('',',');
 
 implementation
 uses StrUtils;
@@ -92,6 +94,21 @@ begin
 			  'maxSize:'+GetSizeHRb(maxSize)+', '+
 			  'TotalSize:'+GetSizeHRb(TotalSize);
 end;
+
+function Tfileinfo.GetJSON : AnsiString;
+begin
+	Result := '"FileInfo" : [{"MinCreateDT" : "'+DateTimeToStr(MinCreateDT)+'", '+
+			  '"MaxCreateDT" : "'+DateTimeToStr(MaxCreateDT)+'", '+
+			  '"MinAccessDT" : "'+DateTimeToStr(MinAccessDT)+'", '+
+			  '"MaxAccessDT" : "'+DateTimeToStr(MaxAccessDT)+'", '+
+			  '"MinModifyDT" : "'+DateTimeToStr(MinModifyDT)+'", '+
+			  '"MaxModifyDT" : "'+DateTimeToStr(MaxModifyDT)+'", '+
+			  '"NbFile" : "'+IntToStr(nbfile)+'", '+
+			  '"MinSize" : "'+IntToStr(minSize)+'", '+
+			  '"MaxSize" : "'+IntToStr(maxSize)+'", '+
+			  '"TotalSize" : "'+IntToStr(TotalSize)+'"}]';
+end;
+
 
 
 function TFileInfo.SetNewSize(SZ : UInt64) : uInt64;

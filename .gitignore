@@ -60,3 +60,4 @@ fp.cfg
 fp.dsk
 *.err
 *.out
+*.json

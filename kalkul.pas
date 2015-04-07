@@ -17,7 +17,9 @@ Uses
 	pathinfo,
 	Contnrs,
 	SysUtils,
-	InternalTypes;
+	FileInfoSet,
+	InternalTypes,
+	Zipper;
 
 Var Tree : TPathTree;
 	i,imax : Integer;
@@ -83,8 +85,31 @@ end;
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Main entry...
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-var Src : String;
+
+procedure SaveJSON(fName : String; List : tFileInfoSet);
 var srcfile : TextFile;
+Dest : TStream;
+//Encode : TEncodingStream;
+//Comp :TCompressionStream;
+// Buf : Array[1..SomeSize] of byte;
+var Buf : AnsiString;
+//zip : tzipper;
+begin
+	buf := List.GetJSON;
+	assignfile(srcfile, GetComputerNetName+'_'+fName+'.json');
+	rewrite(srcfile);
+	Writeln(srcfile,buf);
+	closefile(srcfile);
+
+//	zip := tzipper.create;
+
+//	Dest:=CreateDestStream;
+//	Encode:=TEncodingStream.Create(Dest);
+//	Comp:=TCompressionStream.Create(Encode);
+//	Comp.Write(@Buf[1],Length(Buf));
+end;	
+
+var Src : String;
 Begin
 	Params := TAppParams.create(cIniFile);
 
@@ -97,19 +122,9 @@ Begin
 		Write('Processing... ' + Src + ':\ -> ');
 		Writeln(IntToStr(ProcessTree(Src,ExtractWord(i,Params.SettingsSrc,[','])+':\',Params.SettingsDepth,'')) + ' files');
 	end;
-	// Params.Extensions.DumpStats;
-	// Params.DumpExtensions;
-	//Params.DumpPaths;
-	Params.DumpExtType;
-	Writeln('SOURCES:');
-	writeln(Params.SourceSet.GetJSON);
-	assignfile(srcfile, 'sources.json');
-	rewrite(srcfile);
-	Writeln(srcfile,Params.SourceSet.GetJSON);
-	closefile(srcfile);
-	Writeln('GROUPES:');
-	writeln(Params.GroupSet.GetJSON);
 
+	SaveJSON('sources',Params.SourceSet);
+	SaveJSON('groupes',Params.GroupSet);
 
 	Params.free;
 	Tree.free;

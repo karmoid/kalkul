@@ -47,11 +47,28 @@ function GetSizeHRb(fSize : uInt64): WideString;
 function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
 function NormalizePath(S : String) : String;
+function GetComputerNetName: string;
 
 const virguleLast : array[Boolean] of string = ('',',');
 
 implementation
 uses StrUtils;
+
+function GetComputerNetName: string;
+var
+  buffer: ShortString;
+  size: dword;
+begin
+  size := 250;
+  buffer := StringOfChar(' ',sizeOf(buffer));
+  if GetComputerName(@Buffer[1], size) then
+  begin
+    Result := StrPas(@buffer[1]);
+
+  end  
+  else
+    Result := ''
+end;
 
 constructor Tfileinfo.Create;
 begin

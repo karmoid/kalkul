@@ -13,12 +13,13 @@ type
 
 	public
 		procedure AddUnity(Valyou : string);
+		function GetJSON : string;
 		property Names [Index : Integer] : String read GetNames write SetNames;
 		property Values [Index : Integer] : UInt64 read GetValues write SetValues;
 	end;
 
 implementation
-
+uses SysUtils;
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Ajout d'une unité à la liste.
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -59,5 +60,17 @@ begin
 	TUint64(Objects[Index]).Value := Value;
 end;
 
+function TunityList.GetJSON : string;
+var i : Integer;
+var Virg : String = '';
+begin
+	Result := '"Unities" : [';
+	for i:=0 to pred(count) Do
+	begin
+		Result := Result + Virg+ '{ "Name": "'+Strings[i]+'", "Value": '+IntToStr(Values[i])+' }';
+		Virg := ', ';
+	end;
+	Result := Result + ']';
+end;
 
 end.

@@ -18,7 +18,7 @@ type
 		public
 			constructor Create(PathN : WideString);
 			destructor Destroy; override;
-			function AddSizeExtension(info : TSearchRec; TypeExt : String): UInt64;
+			function AddSizeExtension(info : TSearchRec; LimIndex : Integer; TypeExt : String): UInt64;
 			procedure dumpData();
 			class function CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;			
 			property PathName: WideString read FPathName write FPathName;
@@ -45,9 +45,9 @@ begin
 	inherited Destroy;	
 end;
 
-function TPathInfo.AddSizeExtension(Info : TSearchRec; TypeExt : String): UInt64;
+function TPathInfo.AddSizeExtension(Info : TSearchRec; LimIndex : Integer; TypeExt : String): UInt64;
 begin
-	Result := fDirStats.AddFileStat(Info,TypeExt);
+	Result := fDirStats.AddFileStat(Info,LimIndex,TypeExt);
 end;
 
 class function TPathInfo.CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;

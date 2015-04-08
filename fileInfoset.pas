@@ -11,7 +11,7 @@ type
 
 	public
 		constructor Create();
-		function AddSizeFromInfo(Info : TSearchRec; TypeExt, Key : String) : UInt64; 
+		function AddSizeFromInfo(Info : TSearchRec; LimIndex : Integer; TypeExt, Key : String) : UInt64; 
 		function GetJSON() : AnsiString;
 		procedure dumpData();
 	end;
@@ -26,7 +26,7 @@ begin
 	OwnsObjects := False;
 end;
 
-function tFileInfoSet.AddSizeFromInfo(Info : TSearchRec; TypeExt, Key : String) : UInt64;
+function tFileInfoSet.AddSizeFromInfo(Info : TSearchRec; LimIndex : Integer; TypeExt, Key : String) : UInt64;
 var i : Integer;
 var DirStat : tDirectoryStat;
 begin
@@ -40,7 +40,7 @@ begin
 		//writeln('added [',i,'] key=',Key);
 	end;
 	DirStat := Objects[i] as tDirectoryStat;
-	Result := DirStat.AddFileStat(info,TypeExt);
+	Result := DirStat.AddFileStat(info,LimIndex,TypeExt);
 end;
 
 procedure tFileInfoSet.dumpData();

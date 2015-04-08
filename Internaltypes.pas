@@ -22,13 +22,11 @@ type TFileInfo = class
 		fminsize, fmaxsize, ftotalsize : UInt64;
 		fminCreateDT, fminAccessDT, fminModifyDT: TDateTime;
 		fmaxCreateDT, fmaxAccessDT, fmaxModifyDT: TDateTime;
-		function FileTimeToDTime(FTime: TFileTime): TDateTime;
-		Procedure ExploitInfo(Info : TSearchRec; var CDT,ADT,MDT : TDateTime; var SZ : UInt64);
+		// Procedure ExploitInfo(Info : TSearchRec; var CDT,ADT,MDT : TDateTime; var SZ : UInt64);
 		Procedure SetMinMaxDate(SDate : TDateTime; var Mindate, maxDate : TDateTime);
 		function SetNewSize(SZ : UInt64) : uInt64;
 	public
 		constructor Create;
-		function TakeAccount(Info : TSearchRec) : uInt64;
 		function GetData : string;
 		function GetJSON : AnsiString;
 		property nbfile: uInt64 read Fnbfile write Fnbfile;
@@ -43,6 +41,22 @@ type TFileInfo = class
 		property MaxModifyDT: TDateTime read FMaxModifyDT write FMaxModifyDT;
 	end;
 
+type TFileInfoArray = class
+	private
+		fArray : Array of Tfileinfo;
+		function GetFileInfo(Index : Integer) : TFileInfo;
+		Procedure SetFileInfo(Index : Integer; Fi : TFileInfo);
+		function GetCount : Integer;
+	public
+		constructor Create();
+		function TakeAccount(Info : TSearchRec; LimIndex : Integer) : uInt64;
+		function GetData : string;
+		function GetJSON : AnsiString;
+		property FileInfo[Index : Integer] : TFileInfo read GetFileInfo write SetFileInfo;
+		property Count : Integer read GetCount;
+	end;
+
+
 function GetSizeHRb(fSize : uInt64): WideString;
 function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
@@ -50,9 +64,31 @@ function NormalizePath(S : String) : String;
 function GetComputerNetName: string;
 
 const virguleLast : array[Boolean] of string = ('',',');
+var SizeLimit : integer = 0;
 
 implementation
 uses StrUtils;
+
+function FileTimeToDTime(FTime: TFileTime): TDateTime;
+var
+  LocalFTime: TFileTime;
+  STime: TSystemTime;
+begin
+  FileTimeToLocalFileTime(FTime, LocalFTime);
+  FileTimeToSystemTime(LocalFTime, STime);
+  Result := SystemTimeToDateTime(STime);
+end;
+
+Procedure ExploitInfo(Info : TSearchRec; var CDT,ADT,MDT : TDateTime; var SZ : UInt64);
+begin
+	with info do
+	begin
+		CDT := FileTimeToDTime(FindData.ftCreationTime);
+		ADT := FileTimeToDTime(FindData.ftLastAccessTime);
+		MDT := FileTimeToDTime(FindData.ftLastWriteTime);
+		SZ := Size;
+	end;	
+end;
 
 function GetComputerNetName: string;
 var
@@ -70,6 +106,49 @@ begin
     Result := ''
 end;
 
+constructor TFileInfoArray.Create();
+begin
+	SetLength(fArray,SizeLimit);
+end;
+
+function TFileInfoArray.GetFileInfo(Index : Integer) : TFileInfo;
+begin
+	Result := fArray[Index];
+end;
+
+Procedure TFileInfoArray.SetFileInfo(Index : Integer; Fi : TFileInfo);
+begin
+	fArray[index] := Fi;
+end;
+
+function TFileInfoArray.GetCount : Integer;
+begin
+	Result := SizeLimit;
+end;
+
+function TFileInfoArray.GetData : string;
+var i : integer;
+begin
+	Result := 'FileInfoArray : ';
+	for i := 0 to pred(Count) do
+	if Assigned(FileInfo[i]) then
+		Result := Result + IntToStr(i) + '-' +FileINfo[i].GetData;
+end;
+
+function TFileInfoArray.GetJSON : Ansistring;
+var i : integer;
+var virg : String = '';
+begin
+	Result := '"FileInfoArray" : [';
+	for i := 0 to pred(Count) do
+	if Assigned(FileInfo[i]) then
+	begin
+		Result := Result + virg + '{ "Index": '+IntToStr(i)+', '+FileINfo[i].GetJSON+' }';
+		virg := ', ';
+	end;	
+	Result := Result + ']';
+end;
+
 constructor Tfileinfo.Create;
 begin
 	fMinCreateDT := maxDateTime;	
@@ -82,17 +161,6 @@ begin
 	fminsize := high(uInt64);
 	fnbfile := 0;
 	ftotalsize := 0;
-end;
-
-Procedure TFileInfo.ExploitInfo(Info : TSearchRec; var CDT,ADT,MDT : TDateTime; var SZ : UInt64);
-begin
-	with info do
-	begin
-		CDT := FileTimeToDTime(FindData.ftCreationTime);
-		ADT := FileTimeToDTime(FindData.ftLastAccessTime);
-		MDT := FileTimeToDTime(FindData.ftLastWriteTime);
-		SZ := Size;
-	end;	
 end;
 
 function Tfileinfo.GetData : string;
@@ -120,10 +188,10 @@ begin
 			  '"MaxAccessDT" : "'+DateTimeToStr(MaxAccessDT)+'", '+
 			  '"MinModifyDT" : "'+DateTimeToStr(MinModifyDT)+'", '+
 			  '"MaxModifyDT" : "'+DateTimeToStr(MaxModifyDT)+'", '+
-			  '"NbFile" : "'+IntToStr(nbfile)+'", '+
-			  '"MinSize" : "'+IntToStr(minSize)+'", '+
-			  '"MaxSize" : "'+IntToStr(maxSize)+'", '+
-			  '"TotalSize" : "'+IntToStr(TotalSize)+'"}]';
+			  '"NbFile" : '+IntToStr(nbfile)+', '+
+			  '"MinSize" : '+IntToStr(minSize)+', '+
+			  '"MaxSize" : '+IntToStr(maxSize)+', '+
+			  '"TotalSize" : '+IntToStr(TotalSize)+'}]';
 end;
 
 
@@ -146,29 +214,22 @@ begin
 		Mindate := SDate;	
 end;
 
-function TFileInfo.TakeAccount(Info : TSearchRec) : uInt64;
+function TFileInfoArray.TakeAccount(Info : TSearchRec; LimIndex : Integer) : uInt64;
 var CDT,ADT,MDT : TDateTime;
 var SZ : UInt64;
 begin
-	with info do
-		ExploitInfo(info, CDT,ADT,MDT,SZ);
-	nbfile := nbfile + 1;	
-	SetMinMaxDate(CDT,fMinCreateDT,fMaxCreateDT);
-	SetMinMaxDate(ADT, fMinAccessDT,fmaxAccessDT);
-	SetMinMaxDate(MDT,fminModifyDT,fmaxModifyDT);
-	Result := SetNewSize(SZ);
+	ExploitInfo(info, CDT,ADT,MDT,SZ);
+	if not Assigned(FileInfo[LimIndex]) then
+	  FileInfo[LimIndex] := TFileInfo.Create;
+	with FileInfo[LimIndex] do
+	begin
+		nbfile := nbfile + 1;	
+		SetMinMaxDate(CDT,fMinCreateDT,fMaxCreateDT);
+		SetMinMaxDate(ADT, fMinAccessDT,fmaxAccessDT);
+		SetMinMaxDate(MDT,fminModifyDT,fmaxModifyDT);
+		Result := SetNewSize(SZ);
+	end;  
 end;
-
-function TFileInfo.FileTimeToDTime(FTime: TFileTime): TDateTime;
-var
-  LocalFTime: TFileTime;
-  STime: TSystemTime;
-begin
-  FileTimeToLocalFileTime(FTime, LocalFTime);
-  FileTimeToSystemTime(LocalFTime, STime);
-  Result := SystemTimeToDateTime(STime);
-end;
-
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Procedure interne utilitaire

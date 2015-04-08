@@ -24,6 +24,8 @@ Uses
 Var Tree : TPathTree;
 	i,imax : Integer;
 	Params : TAppParams;
+    Src : String;
+    Start : TdateTime;
 
 Const cIniFile = 'kalkul.ini';
 
@@ -32,12 +34,14 @@ Var Info : TSearchRec;
 	Count : Longint = 0;
 	TypeExt : String;
 	PI : tPathInfo;
-	WGpName : String;
+	WGpName,WSpecific : String;
+	LimIndex : Integer;
 begin
 if Depth>0 then
 	begin
 	//Writeln('Ajoute '+FileSpec);
 	PI := Tree.AddPathInfo(FileSpec);
+	WSpecific := Params.FindSpecificByPath(FileSpec);
 	WGpName := Params.FindGroupByPath(FileSpec);
 	if WGpName <> '' then
 	  GroupName := WGpName;
@@ -57,13 +61,15 @@ if Depth>0 then
 			    	// remplacer Ext par ExtractFileExt(Info.Name)
 			    	// Params.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
 			    	// PI Gère un Item
+			    	LimIndex := Params.GetLimitIndex(Info);
 			    	TypeExt := Params.GetExtensionType(lowerCase(ExtractFileExt(Info.Name)),GroupName);
 			    	//Writeln('TypeExtension de ',lowerCase(ExtractFileExt(Info.Name)),',',GroupName,' = ',TypeExt);
 			    	//if GroupName<>'' then
 			    	//	Writeln('TypeExt = [',TypeExt,'] pour ',lowerCase(ExtractFileExt(Info.Name)),' dans ',GroupName);
-			    	PI.AddSizeExtension(Info,TypeExt);
-			    	Params.SourceSet.AddSizeFromInfo(Info,TypeExt,Src); // gère x Items
-			    	Params.GroupSet.AddSizeFromInfo(Info,TypeExt,GroupName); // gère x Items
+			    	PI.AddSizeExtension(Info,LimIndex,TypeExt);
+			    	Params.SourceSet.AddSizeFromInfo(Info,LimIndex,TypeExt,Src); // gère x Items
+			    	Params.GroupSet.AddSizeFromInfo(Info,LimIndex,TypeExt,GroupName); // gère x Items
+			    	Params.SpecificSet.AddSizeFromInfo(Info,LimIndex,TypeExt,WSpecific); // gère x Items
 		    	end;
 			end;
 	    Until FindNext(info)<>0;
@@ -88,17 +94,25 @@ end;
 
 procedure SaveJSON(fName : String; List : tFileInfoSet);
 var srcfile : TextFile;
-Dest : TStream;
+var Ordinateur : string;
+//Dest : TStream;
 //Encode : TEncodingStream;
 //Comp :TCompressionStream;
 // Buf : Array[1..SomeSize] of byte;
 var Buf : AnsiString;
 //zip : tzipper;
 begin
+	Ordinateur := GetComputerNetName;
 	buf := List.GetJSON;
-	assignfile(srcfile, GetComputerNetName+'_'+fName+'.json');
+	assignfile(srcfile, Ordinateur+'_'+fName+'.json');
 	rewrite(srcfile);
+	Writeln(srcfile,'{ "computername" : "'+Ordinateur+'", '+
+					' "start_at" : "'+ DateTimeToStr(Start) + '", ' +
+					' "stop_at" : "'+ DateTimeToStr(Now) + '", ');
+	Writeln(srcfile,Params.Unities.GetJSON+', '+
+		            '"Data" : [');
 	Writeln(srcfile,buf);
+	Writeln(srcfile,']}');
 	closefile(srcfile);
 
 //	zip := tzipper.create;
@@ -109,8 +123,8 @@ begin
 //	Comp.Write(@Buf[1],Length(Buf));
 end;	
 
-var Src : String;
 Begin
+	Start := now;
 	Params := TAppParams.create(cIniFile);
 
 	//Params.DumpPaths;
@@ -125,6 +139,7 @@ Begin
 
 	SaveJSON('sources',Params.SourceSet);
 	SaveJSON('groupes',Params.GroupSet);
+	SaveJSON('specific',Params.SpecificSet);
 
 	Params.free;
 	Tree.free;

@@ -20,6 +20,7 @@ type TPathsAndGroupsManager = class
 		procedure AddSpecificPathName(S : String);		
 		procedure AddSpecificPath(S: string);
 		function FindGroupByPath(S : String) : string;
+		function FindSpecificByPath(S : String) : string;
 		function GetExtensionType(key : string; GName : String): String;
 
 		property Paths: TSpecificPaths read fPaths;
@@ -102,6 +103,11 @@ begin
 	PathName := Paths.Values[NormalizePath(S)];
 	if PathName<>'' then
 	  Result := PathNames.Values[PathName];
+end;
+
+function TPathsAndGroupsManager.FindSpecificByPath(S : String) : string;
+begin
+	Result := Paths.Values[NormalizePath(S)];
 end;
 
 function TPathsAndGroupsManager.GetExtensionType(key : string; GName : String): String;

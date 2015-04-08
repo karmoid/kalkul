@@ -35,6 +35,7 @@ type
 		fReportExtType : TStringList;
 		fSourceSet : tFileInfoSet;
 		fGroupSet : tFileInfoSet;
+		fSpecificSet : tFileInfoSet;
 		procedure InitializeIniFile();
 		procedure LoadExtensions();
 		procedure LoadUnities();
@@ -54,7 +55,9 @@ type
 		procedure DumpExtType();
 		function AddSizeExtension(key : string; info : TSearchRec; WithDetails: Boolean; GName : String): UInt64;
 		function FindGroupByPath(S : String) : string;
+		function FindSpecificByPath(S : String) : string;
 		function GetExtensionType(Ext : String; GName : string) : string;
+		function GetLimitIndex(info : TSearchRec) : Integer;
 		property Unities: tUnityList read fUnity;
 		property SettingsSrc: WideString read FSettingsSrc write FSettingsSrc;
 		property SettingsDepth: Integer read FSettingsDepth write FSettingsDepth;
@@ -63,6 +66,7 @@ type
 		property SpecificPaths: TSpecificPaths read GetSpecificPaths;
 		property SourceSet : tFileInfoSet read fSourceSet;
 		property GroupSet : tFileInfoSet read fGroupSet;
+		property SpecificSet : tFileInfoSet read fSpecificSet;
 
 	end;	
 
@@ -113,6 +117,7 @@ constructor TAppParams.Create(fName : String);
 	fReportExtType.Sorted := True;	
 	fSourceSet := tFileInfoSet.create;
 	fGroupSet := tFileInfoSet.create;
+	fSpecificSet := tFileInfoSet.create;
 
 // pas nécessaire ou obligatoire (valeur par défaut)	
 	InitializeIniFile;
@@ -136,6 +141,7 @@ destructor TAppParams.Destroy;
 	fReportExtType.free;
 	fGroupSet.free;
 	fSourceSet.free;
+	fSpecificSet.free;
 	inherited Destroy;		
 	end;
 
@@ -202,6 +208,7 @@ begin
 		fUnity.AddUnity(Sections.ValueFromIndex[Counter]);
 	end;
 	Sections.free;
+	SizeLimit := fUnity.Count;
 end;
 
 procedure TAppParams.LoadSettings();
@@ -321,6 +328,11 @@ begin
 	Result := PathAndGroupManager.FindGroupByPath(S);
 end;
 
+function TAppParams.FindSpecificByPath(S : String) : string;
+begin
+	Result := PathAndGroupManager.FindSpecificByPath(S);
+end;
+
 procedure TAppParams.DumpExtensions();
 begin
 	ExtensionTypeManager.DumpExtensions();	
@@ -350,6 +362,14 @@ begin
 	Result := PathAndGroupManager.GetExtensionType(Ext,GName);
 	if Result = '' then
 		Result := ExtensionTypeManager.GetExtensionType(Ext);
+end;
+
+function TAppParams.GetLimitIndex(info : TSearchRec) : Integer;
+var i : integer;
+begin
+	for i:= 0 to pred(fUnity.count) do
+		if info.size <= funity.Values[i] then break;
+	Result := i;	
 end;
 
 

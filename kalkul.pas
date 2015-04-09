@@ -123,6 +123,9 @@ begin
 //	Comp.Write(@Buf[1],Length(Buf));
 end;	
 
+Var K : Qword;
+
+
 Begin
 	Start := now;
 	Params := TAppParams.create(cIniFile);

@@ -12,8 +12,8 @@ type
 		procedure SetValues(Index : Integer; Value : UInt64);
 
 	public
-		procedure AddUnity(Valyou : string);
-		function GetJSON : string;
+		procedure AddUnity(S : string; Valyou : string);
+		function GetJSON : AnsiString;
 		property Names [Index : Integer] : String read GetNames write SetNames;
 		property Values [Index : Integer] : UInt64 read GetValues write SetValues;
 	end;
@@ -23,9 +23,9 @@ uses SysUtils;
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Ajout d'une unité à la liste.
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-procedure TunityList.AddUnity(Valyou : string);
+procedure TunityList.AddUnity(S : string; Valyou : string);
 	begin
-		AddObject(Valyou, TUint64.Create(EvaluateUnity(Valyou)));
+		AddObject(S, TUint64.Create(EvaluateUnity(Valyou)));
 	end;
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -60,7 +60,7 @@ begin
 	TUint64(Objects[Index]).Value := Value;
 end;
 
-function TunityList.GetJSON : string;
+function TunityList.GetJSON : AnsiString;
 var i : Integer;
 var Virg : String = '';
 begin

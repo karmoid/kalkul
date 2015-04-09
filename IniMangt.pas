@@ -205,7 +205,7 @@ begin
 	for Counter := 0 to Pred(Sections.count) do
     if Sections.Names[Counter][1]<>cComment then
 	begin
-		fUnity.AddUnity(Sections.ValueFromIndex[Counter]);
+		fUnity.AddUnity(Sections.Names[Counter],Sections.ValueFromIndex[Counter]);
 	end;
 	Sections.free;
 	SizeLimit := fUnity.Count;

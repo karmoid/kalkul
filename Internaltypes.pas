@@ -9,9 +9,9 @@ type TUInt64 = class
 		function GetFromByteToHR : string;
 		function GetFromKByteToHR : string;
 	public
-		constructor Create(Val : Cardinal);
+		constructor Create(Val : UInt64);
 		property Value: UInt64 read FValue write FValue;	
-		function Add(Val : Cardinal) : UInt64;
+		function Add(Val : UInt64) : UInt64;
 		property FromByteToHR : String Read GetFromByteToHR;
 		property FromKByteToHR : String Read GetFromKByteToHR;
 end;
@@ -231,40 +231,79 @@ begin
 	end;  
 end;
 
+function StrToUInt64(const S: String): UInt64;
+var c: cardinal;
+    P: PChar;
+begin
+  P := @S[1];
+  if P=nil then begin
+    result := 0;
+    exit;
+  end;
+  if ord(P^) in [1..32] then repeat inc(P) until not(ord(P^) in [1..32]);
+  c := ord(P^)-48;
+  if c>9 then
+    result := 0 else begin
+    result := c;
+    inc(P);
+    repeat
+      c := ord(P^)-48;
+      if c>9 then
+        break else
+        result := result*10+c;
+      inc(P);
+    until false;
+  end;
+end;
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Procedure interne utilitaire
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 function EvaluateUnity(Valyou : String): UInt64;
-var Valeur : Integer;
+var Valeur : UInt64;
 	Unite : UInt64;
 	Pos : Word;
 	begin
 		Result := 0;
-		Val(Valyou,Valeur,Pos);
-		if Pos <> 0 then
+		Pos := 1;
+		while Pos<=Length(Valyou) do
 		begin
-			// write('on va tester '+lowercase(Valyou[Pos]));
-			case lowercase(Valyou[Pos]) of
-				'b': Unite := 1;
-				'k': Unite := 1 << 10;
-				'm': Unite := 1 << 20;
-				'g': Unite := 1 << 30;
-				't': Unite := 1 << 40;
-				else 
-					Unite := 0;
-			end;
-			// writeln(' unite = '+IntToStr(Unite));
+			if not (Valyou[Pos] in ['0'..'9']) then
+			  Break;
+			Inc(Pos);
 		end;	
-		Val(LeftStr(Valyou,Pos-1),Valeur,Pos);
-		if (Unite>0) and (Pos = 0) then
+		try
+			if Pos<=Length(Valyou) then
+			begin
+				// write('on va tester '+lowercase(Valyou[Pos]));
+				case lowercase(Valyou[Pos]) of
+					'b': Unite := 1;
+					'k': Unite := 1 << 10;
+					'm': Unite := 1 << 20;
+					'g': Unite := 1 << 30;
+					't': Unite := 1 << 40;
+					'p': Unite := 1 << 50;
+					else 
+						Unite := 0;
+				end;
+				Valeur := StrToUInt64(LeftStr(Valyou,Pos-1));
+			end
+			else
+			begin
+				unite := 1;
+				Valeur := StrToUInt64(Valyou);
+			end;
 			Result := Unite * Valeur;	
+		except on e: EConvertError do
+				writeln('Exception ConvertError on ('+ValYou+') : Pos=',Pos,', "',e.message,'"');
+		end;
 	end;
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Procedure interne utilitaire
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 function GetSizeHRAny(fSize : uInt64; IndexV : Integer): WideString;
-const Units : array[1..5] of string = ('','Kib','Mib','Gib','Tib');
+const Units : array[1..6] of string = ('','Kib','Mib','Gib','Tib','Pib');
 var index : Integer;
 	isize : UInt64;
 	divider : UInt64;
@@ -272,7 +311,7 @@ begin
 	divider := 1;
 	index := IndexV;
 	isize := fsize;
-	while (index<=5) and (isize>1024) do
+	while (index<=6) and (isize>1024) do
 	begin
 		index := index + 1;
 		isize := isize div 1024;	
@@ -302,12 +341,12 @@ begin
 	Result := GetSizeHRAny(fSize,2);
 end;
 
-constructor TUInt64.Create(Val : Cardinal);
+constructor TUInt64.Create(Val : UInt64);
 	begin
 		fValue := Val;
 	end;
 
-function TUInt64.Add(Val : Cardinal): UInt64;
+function TUInt64.Add(Val : UInt64): UInt64;
 	begin
 		FValue := FValue + Val;
 		Result := FValue;

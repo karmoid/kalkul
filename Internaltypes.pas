@@ -62,12 +62,50 @@ function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
 function NormalizePath(S : String) : String;
 function GetComputerNetName: string;
+function XMLDateTime2DateTime(const XMLDateTime: String): TDateTime; 
+function DateTime2XMLDateTime(const vDateTime: TDateTime): String; 
 
 const virguleLast : array[Boolean] of string = ('',',');
 var SizeLimit : integer = 0;
+const cIntlDateTimeStor = 'yyyy-mm-dd hh:mm:ss';    // for storage 
+const cIntlDateTimeDisp = 'yyyy-mm-dd hh:mm:ss';  // for display 
+const cIntlDateDisp     = 'yyyy-mm-dd';  // for display 
 
 implementation
-uses StrUtils;
+uses DateUtils,
+     StrUtils;
+
+function XMLDateTime2DateTime(const XMLDateTime: String): TDateTime; 
+var 
+  DateOnly: String; 
+  TimeOnly: String; 
+  TPos: Integer; 
+begin 
+	TPos := Pos(' ', XMLDateTime); 
+	if TPos <> 0 then 
+	begin
+    	DateOnly := Copy(XMLDateTime, 1, TPos - 1);
+    	TimeOnly := Copy(XMLDateTime, TPos + 1, Length(XMLDateTime));
+		TPos := Pos(' ', TimeOnly); 
+		if TPos <> 0 then 
+			TimeOnly := Copy(TimeOnly, 1, TPos - 1);
+  		Result := ScanDateTime('yyyy-mm-dd hh:nn:ss', DateOnly+' '+TimeOnly); 
+	end
+	else 
+	begin
+    	DateOnly := XMLDateTime; 
+		Result := ScanDateTime('yyyy-mm-dd', DateOnly); 
+	end;
+end; 
+
+
+function DateTime2XMLDateTime(const vDateTime: TDateTime): String; 
+var offset : integer;
+const Signs : array[-1..1] of char = ('+',' ','-');
+begin
+	offset := GetLocalTimeOffset;
+	Result := FormatDateTime(cIntlDateTimeStor,vDateTime)+' '+Signs[Offset div abs(offset)]+Format('%.4d',[offset div 60*-100]);
+end;
 
 function FileTimeToDTime(FTime: TFileTime): TDateTime;
 var
@@ -182,12 +220,12 @@ end;
 
 function Tfileinfo.GetJSON : AnsiString;
 begin
-	Result := '"FileInfo" : [{"MinCreateDT" : "'+DateTimeToStr(MinCreateDT)+'", '+
-			  '"MaxCreateDT" : "'+DateTimeToStr(MaxCreateDT)+'", '+
-			  '"MinAccessDT" : "'+DateTimeToStr(MinAccessDT)+'", '+
-			  '"MaxAccessDT" : "'+DateTimeToStr(MaxAccessDT)+'", '+
-			  '"MinModifyDT" : "'+DateTimeToStr(MinModifyDT)+'", '+
-			  '"MaxModifyDT" : "'+DateTimeToStr(MaxModifyDT)+'", '+
+	Result := '"FileInfo" : [{"MinCreateDT" : "'+DateTime2XMLDateTime(MinCreateDT)+'", '+
+			  '"MaxCreateDT" : "'+DateTime2XMLDateTime(MaxCreateDT)+'", '+
+			  '"MinAccessDT" : "'+DateTime2XMLDateTime(MinAccessDT)+'", '+
+			  '"MaxAccessDT" : "'+DateTime2XMLDateTime(MaxAccessDT)+'", '+
+			  '"MinModifyDT" : "'+DateTime2XMLDateTime(MinModifyDT)+'", '+
+			  '"MaxModifyDT" : "'+DateTime2XMLDateTime(MaxModifyDT)+'", '+
 			  '"NbFile" : '+IntToStr(nbfile)+', '+
 			  '"MinSize" : '+IntToStr(minSize)+', '+
 			  '"MaxSize" : '+IntToStr(maxSize)+', '+

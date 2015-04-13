@@ -17,6 +17,7 @@ Uses
 	pathinfo,
 	Contnrs,
 	SysUtils,
+	DateUtils,
 	FileInfoSet,
 	InternalTypes,
 	Zipper;
@@ -107,8 +108,8 @@ begin
 	assignfile(srcfile, Ordinateur+'_'+fName+'.json');
 	rewrite(srcfile);
 	Writeln(srcfile,'{ "computername" : "'+Ordinateur+'", '+
-					' "start_at" : "'+ DateTimeToStr(Start) + '", ' +
-					' "stop_at" : "'+ DateTimeToStr(Now) + '", ');
+					' "start_at" : "'+ DateTime2XMLDateTime(Start) + '", ' +
+					' "stop_at" : "'+ DateTime2XMLDateTime(Now) + '", ');
 	Writeln(srcfile,Params.Unities.GetJSON+', '+
 		            '"Data" : [');
 	Writeln(srcfile,buf);
@@ -124,7 +125,9 @@ begin
 end;	
 
 Var K : Qword;
-
+Var DateMe, UDate : TdateTime;
+Var SDateMe : String;
+var SystemTime: TSystemTime;
 
 Begin
 	Start := now;

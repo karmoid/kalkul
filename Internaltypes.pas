@@ -220,7 +220,7 @@ end;
 
 function Tfileinfo.GetJSON : AnsiString;
 begin
-	Result := '"FileInfo" : [{"MinCreateDT" : "'+DateTime2XMLDateTime(MinCreateDT)+'", '+
+	Result := '"FileInfo" : {"MinCreateDT" : "'+DateTime2XMLDateTime(MinCreateDT)+'", '+
 			  '"MaxCreateDT" : "'+DateTime2XMLDateTime(MaxCreateDT)+'", '+
 			  '"MinAccessDT" : "'+DateTime2XMLDateTime(MinAccessDT)+'", '+
 			  '"MaxAccessDT" : "'+DateTime2XMLDateTime(MaxAccessDT)+'", '+
@@ -229,7 +229,7 @@ begin
 			  '"NbFile" : '+IntToStr(nbfile)+', '+
 			  '"MinSize" : '+IntToStr(minSize)+', '+
 			  '"MaxSize" : '+IntToStr(maxSize)+', '+
-			  '"TotalSize" : '+IntToStr(TotalSize)+'}]';
+			  '"TotalSize" : '+IntToStr(TotalSize)+'}';
 end;
 
 

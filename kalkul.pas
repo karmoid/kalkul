@@ -110,10 +110,8 @@ begin
 	Writeln(srcfile,'{ "computername" : "'+Ordinateur+'", '+
 					' "start_at" : "'+ DateTime2XMLDateTime(Start) + '", ' +
 					' "stop_at" : "'+ DateTime2XMLDateTime(Now) + '", ');
-	Writeln(srcfile,Params.Unities.GetJSON+', '+
-		            '"Data" : [');
-	Writeln(srcfile,buf);
-	Writeln(srcfile,']}');
+	Writeln(srcfile,Params.Unities.GetJSON+',  ');
+	Writeln(srcfile,buf+'}');
 	closefile(srcfile);
 
 //	zip := tzipper.create;

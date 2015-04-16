@@ -61,13 +61,13 @@ function tFileInfoSet.GetJSON() : AnsiString;
 var i : integer;
 var DirStat : tDirectoryStat;
 begin
-	Result := '{ "FileInfoSet" : [';
+	Result := '"FileInfoSet" : [';
 	for i:= 0 to pred(Count) do
 	begin
 		DirStat := Objects[i] as tDirectoryStat;
 		Result := Result + '{ "Name" : "'+Strings[i]+'", '+DirStat.GetJSON() + '}' + VirguleLast[i<>pred(count)];
 	end;
-	Result := Result + ']}'
+	Result := Result + ']'
 end;
 
 end.

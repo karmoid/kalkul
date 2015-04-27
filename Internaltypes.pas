@@ -62,8 +62,8 @@ function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
 function NormalizePath(S : String) : String;
 function GetComputerNetName: string;
-function XMLDateTime2DateTime(const XMLDateTime: String): TDateTime; 
-function DateTime2XMLDateTime(const vDateTime: TDateTime): String; 
+function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime; 
+function DateTime2XMLDateTime(const vDateTime: TDateTime): AnsiString; 
 
 const virguleLast : array[Boolean] of string = ('',',');
 var SizeLimit : integer = 0;
@@ -75,7 +75,7 @@ implementation
 uses DateUtils,
      StrUtils;
 
-function XMLDateTime2DateTime(const XMLDateTime: String): TDateTime; 
+function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime; 
 var 
   DateOnly: String; 
   TimeOnly: String; 
@@ -99,7 +99,7 @@ begin
 end; 
 
 
-function DateTime2XMLDateTime(const vDateTime: TDateTime): String; 
+function DateTime2XMLDateTime(const vDateTime: TDateTime): AnsiString; 
 var offset : integer;
 const Signs : array[-1..1] of char = ('+',' ','-');
 begin

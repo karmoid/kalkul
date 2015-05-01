@@ -30,20 +30,34 @@ Var Tree : TPathTree;
 
 Const cIniFile = 'kalkul.ini';
 
-function ProcessTree(Src, FileSpec : string; Depth: Integer; GroupName : String): Cardinal;
+function ProcessTree(Src, RootSpec, NewPath : string; Depth: Integer; GroupName : String): Cardinal;
 Var Info : TSearchRec;
 	Count : Longint = 0;
 	TypeExt : String;
 	PI : tPathInfo;
-	WGpName,WSpecific : String;
+	FileSpec,KeyFilespec,WGpName,WSpecific : String;
 	LimIndex : Integer;
 begin
-if Depth>0 then
+FileSpec := RootSpec+NewPath+'\';
+if Depth<=0 then
+	KeyFileSpec := RootSpec+'<any>'+'\'
+else
+	KeyFilespec := FileSpec;	
+
+if (Depth>0) or (Params.SettingsDrillDown) then
 	begin
 	//Writeln('Ajoute '+FileSpec);
-	PI := Tree.AddPathInfo(FileSpec);
 	WSpecific := Params.FindSpecificByPath(FileSpec);
 	WGpName := Params.FindGroupByPath(FileSpec);
+	// si on trouve un paramètre Path Spécifique
+	// on force le chemin même si Depth dépassé
+	// et on remet la profondeur égale au paramétrage
+	if WSpecific<>'' then
+	begin
+		KeyFilespec := FileSpec;
+		Depth := Params.SettingsDepth;
+	end;
+	PI := Tree.AddPathInfo(KeyFileSpec);
 	if WGpName <> '' then
 	  GroupName := WGpName;
 
@@ -55,7 +69,8 @@ if Depth>0 then
 	    	begin
 		    If (Attr and faDirectory) = faDirectory then
 		        begin
-			        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec+Name+'\',Depth-1,GroupName);
+//			        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec+Name+'\',Depth-1,GroupName);
+			        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec,Name,Depth-1,GroupName);
 		        end
 		    else
 			    begin
@@ -108,8 +123,9 @@ begin
 	assignfile(srcfile, Ordinateur+'_'+fName+'.json');
 	rewrite(srcfile);
 	Writeln(srcfile,'{ "computername" : "'+Ordinateur+'", '+
-					' "start_at" : "'+ DateTime2XMLDateTime(Start) + '", ' +
-					' "stop_at" : "'+ DateTime2XMLDateTime(Now) + '", ');
+					'"start_at" : "'+ DateTime2XMLDateTime(Start) + '", ' +
+					'"stop_at" : "'+ DateTime2XMLDateTime(Now) + '", ');
+	Writeln(srcfile,Params.SettingsGetJSON+',  ');
 	Writeln(srcfile,Params.Unities.GetJSON+',  ');
 	Writeln(srcfile,buf+'}');
 	closefile(srcfile);
@@ -138,7 +154,7 @@ Begin
 	begin
 		Src := ExtractWord(i,Params.SettingsSrc,[',']);
 		Write('Processing... ' + Src + ':\ -> ');
-		Writeln(IntToStr(ProcessTree(Src,ExtractWord(i,Params.SettingsSrc,[','])+':\',Params.SettingsDepth,'')) + ' files');
+		Writeln(IntToStr(ProcessTree(Src,ExtractWord(i,Params.SettingsSrc,[','])+':','',Params.SettingsDepth,'')) + ' files');
 	end;
 
 	SaveJSON('sources',Params.SourceSet);

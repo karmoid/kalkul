@@ -56,7 +56,6 @@ type TFileInfoArray = class
 		property Count : Integer read GetCount;
 	end;
 
-
 function GetSizeHRb(fSize : uInt64): WideString;
 function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
@@ -66,6 +65,7 @@ function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime;
 function DateTime2XMLDateTime(const vDateTime: TDateTime): AnsiString; 
 
 const virguleLast : array[Boolean] of string = ('',',');
+const cTrueFalse : array[Boolean] of string = ('False','True');
 var SizeLimit : integer = 0;
 const cIntlDateTimeStor = 'yyyy-mm-dd hh:mm:ss';    // for storage 
 const cIntlDateTimeDisp = 'yyyy-mm-dd hh:mm:ss';  // for display 
@@ -220,7 +220,7 @@ end;
 
 function Tfileinfo.GetJSON : AnsiString;
 begin
-	Result := '"FileInfo" : {"MinCreateDT" : "'+DateTime2XMLDateTime(MinCreateDT)+'", '+
+	Result := '"MinCreateDT" : "'+DateTime2XMLDateTime(MinCreateDT)+'", '+
 			  '"MaxCreateDT" : "'+DateTime2XMLDateTime(MaxCreateDT)+'", '+
 			  '"MinAccessDT" : "'+DateTime2XMLDateTime(MinAccessDT)+'", '+
 			  '"MaxAccessDT" : "'+DateTime2XMLDateTime(MaxAccessDT)+'", '+
@@ -229,7 +229,7 @@ begin
 			  '"NbFile" : '+IntToStr(nbfile)+', '+
 			  '"MinSize" : '+IntToStr(minSize)+', '+
 			  '"MaxSize" : '+IntToStr(maxSize)+', '+
-			  '"TotalSize" : '+IntToStr(TotalSize)+'}';
+			  '"TotalSize" : '+IntToStr(TotalSize);
 end;
 
 

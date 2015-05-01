@@ -29,6 +29,7 @@ type
 		fSettingsSrc : WideString;
 		fSettingsDepth :Integer;
 		fSettingsKeepUDetails : Boolean;
+		fSettingsDrillDown : Boolean;
 		//fSpecificPaths : TStringList;
 		fExtensionTypeManager : TExtensionTypeManager;
 		fPathAndGroupManager : TPathsAndGroupsManager;
@@ -58,10 +59,12 @@ type
 		function FindSpecificByPath(S : String) : string;
 		function GetExtensionType(Ext : String; GName : string) : string;
 		function GetLimitIndex(info : TSearchRec) : Integer;
+		function SettingsGetJSON : AnsiString;
 		property Unities: tUnityList read fUnity;
 		property SettingsSrc: WideString read FSettingsSrc write FSettingsSrc;
 		property SettingsDepth: Integer read FSettingsDepth write FSettingsDepth;
 		property SettingsKeepUDetails: Boolean read FSettingsKeepUDetails write FSettingsKeepUDetails;
+		property SettingsDrillDown: Boolean read fSettingsDrillDown write fSettingsDrillDown;
 		property Extensions: TFileKind read FExtensions;
 		property SpecificPaths: TSpecificPaths read GetSpecificPaths;
 		property SourceSet : tFileInfoSet read fSourceSet;
@@ -215,7 +218,8 @@ procedure TAppParams.LoadSettings();
 begin
 	SettingsDepth := IniF.ReadInteger(cSections[tsSettings],'depth', 3);
 	SettingsSrc := IniF.ReadString(cSections[tsSettings],'source', 'c');
-	SettingsKeepUDetails := True; //IniF.ReadBool(cSections[tsSettings],'KeepUnknownDetails', False);
+	SettingsKeepUDetails := IniF.ReadBool(cSections[tsSettings],'KeepUnknownDetails', False);
+	SettingsDrillDown := IniF.ReadBool(cSections[tsSettings],'drilldown', False);
 end;
 
 procedure TAppParams.LoadSpecificPath();
@@ -372,5 +376,12 @@ begin
 	Result := i;	
 end;
 
+function TAppParams.SettingsGetJSON : AnsiString;
+begin
+	Result := '"DrillDown": "'+cTrueFalse[SettingsDrillDown]+'", '+
+			  '"KeepUnknownDetails": "'+cTrueFalse[SettingsKeepUDetails]+'", '+
+			  '"Depth": "'+IntToStr(SettingsDepth)+'", '+
+			  '"Sources": "'+SettingsSrc+'"';
+end;
 
 end.

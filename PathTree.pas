@@ -12,6 +12,8 @@ type
 			destructor Destroy; override;
 			function AddPathInfo(Name : String) : TPathInfo;
 			procedure BrowseAll;
+			function GetMissedPaths : AnsiString;
+			function UnknownGetJSON : AnsiString;
 	end;
 
 implementation
@@ -35,6 +37,43 @@ destructor TPathTree.Destroy;
 		ftree.free;
 	end;	
 
+function TPathTree.GetMissedPaths : AnsiString;
+var TreeEnum : TAVLTreeNodeEnumerator;	
+var TreeItem,Node : TAVLTreeNode;
+var MyData : TPathInfo;
+begin
+	result := '';
+	TreeEnum := fTree.GetEnumerator;
+	While TreeEnum.MoveNext do
+	begin
+		TreeItem := TreeEnum.Current;
+		with TPathInfo(TreeItem.Data) do
+			if State = tpisConfigured then
+				Result := Result + Pathname + '|'
+	end;
+end;
+
+function TPathTree.UnknownGetJSON : AnsiString;
+var TreeEnum : TAVLTreeNodeEnumerator;	
+var TreeItem,Node : TAVLTreeNode;
+var MyData : TPathInfo;
+begin
+	Result := '"FileInfoSet" : [';
+	TreeEnum := fTree.GetEnumerator;
+	While TreeEnum.MoveNext do
+	begin
+		TreeItem := TreeEnum.Current;
+		with TPathInfo(TreeItem.Data) do
+			if (SpecificName<>'') or (GroupName<>'') then
+				Result := Result + DumpJSON + ',';
+	end;
+	if Result[Length(Result)]=',' then
+		Result[Length(Result)]:=']'
+	else
+		Result := Result + ']';
+end;
+
+
 procedure TPathTree.BrowseAll;
 var TreeEnum : TAVLTreeNodeEnumerator;	
 var TreeItem,Node : TAVLTreeNode;
@@ -47,8 +86,8 @@ var MyData : TPathInfo;
 			TreeItem := TreeEnum.Current;
 			with TPathInfo(TreeItem.Data) do
 			begin
-				write('(Item : Prof(' + IntToStr(TreeItem.TreeDepth) + ') ');
-				dumpData;			
+				write('(Item : Prof(' + IntToStr(TreeItem.TreeDepth) + ') '+
+					  dumpData);			
 			end;
 		end;
 		//for Node in fTree do begin
@@ -66,14 +105,14 @@ var Node : TAVLTreeNode;
 			Node := fTree.find(PI);
 			if assigned(Node) then
 			begin
-				// writeln('Find "',Name,'" give ',TPathInfo(Node.Data).PathName);
+				writeln('Find "',Name,'" give ',TPathInfo(Node.Data).PathName);
 				PI.free;
 				PI := TPathInfo(Node.Data);
 				PI.State := tpisFound;
 			end
 			else
 			begin
-				// writeln('Find "',Name,'" give nothing. Create Node');
+				writeln('Find "',Name,'" give nothing. Create Node');
 				Node := fTree.Add(PI);
 			end;	
 			Result := PI;

@@ -1,7 +1,6 @@
 Unit PathInfo;
 Interface
 uses DirectoryStat,
-     filekind,
      SysUtils,
      InternalTypes;
 
@@ -12,19 +11,20 @@ type
 		private
 			fPathName : WideString;
 			fState : tPIState;
-			fSumarize : TFileKind;
-//			fGroupName : String;
+			fGroupName : String;
+			fSpecificName : String;
 			fDirStats : tDirectoryStat;
 		public
 			constructor Create(PathN : WideString);
 			destructor Destroy; override;
-			function AddSizeExtension(info : TSearchRec; LimIndex : Integer; TypeExt : String): UInt64;
-			procedure dumpData();
+			function AddSizeExtension(info : TSearchRec; LimIndex : Integer; TypeExt : String; KeepUnknown: boolean; GpName, SpName : string): UInt64;
+			function dumpData() : AnsiString;
+			function dumpJSON() : AnsiString;
 			class function CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;			
 			property PathName: WideString read FPathName write FPathName;
-			property Sumarize: TFileKind read FSumarize write FSumarize;
 			property State: tPIState read FState write FState;
-//			property GroupName: String read FGroupName write FGroupName;
+			property GroupName: String read FGroupName write FGroupName;
+			property SpecificName: String read FSpecificName write FSpecificName;
 			property DirStats: tDirectoryStat read FDirStats;
 	end;
 
@@ -40,14 +40,27 @@ end;
 destructor TPathInfo.Destroy; 
 begin
 	fPathName := '';
-	fSumarize.free;
 	fDirStats.free;
 	inherited Destroy;	
 end;
 
-function TPathInfo.AddSizeExtension(Info : TSearchRec; LimIndex : Integer; TypeExt : String): UInt64;
+function TPathInfo.AddSizeExtension(Info : TSearchRec; LimIndex : Integer; TypeExt : String; KeepUnknown: boolean; GpName, SpName : string): UInt64;
+var Ext : string;
 begin
-	Result := fDirStats.AddFileStat(Info,LimIndex,TypeExt);
+	if (TypeExt='') and KeepUnknown then
+	begin
+		Ext := lowerCase(ExtractFileExt(Info.Name));
+		if Length(Ext)>4 then
+		begin
+			Ext := Copy(Ext,1,5);
+			Ext[5] := '*';
+		end;
+		TypeExt := '!na'+Ext;
+		LimIndex := 0;
+		GroupName := GpName;
+		SpecificName := SpName;
+		Result := fDirStats.AddFileStat(Info,LimIndex,TypeExt);
+	end;
 end;
 
 class function TPathInfo.CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;
@@ -55,14 +68,26 @@ begin
 	Result := AnsiCompareText(Item1.PathName, Item1.PathName);
 end;
 
-procedure TPathInfo.dumpData();
+function TPathInfo.dumpData() : AnsiString;
 var i : integer;
 begin
-	writeln('Path(' + PathName +
+	Result := 'Path(' + PathName +
 		    ') State(' +  GetEnumName(TypeInfo(tPIState), ord(State)) + 
-		    ') Size(' + DirStats.Size.FromByteToHR +')');
+		    ') Size(' + DirStats.Size.FromByteToHR +
+		    ') Specific(' + SpecificName +
+		    ') GroupName(' + GroupName +')';
 	for i:= 0 to Pred(fDirStats.count) do
-		writeln(fDirStats.TypeExtension[i],':',fDirStats.FileInfoFromIndex[i].GetData);
+		Result := Result + '\n' + fDirStats.TypeExtension[i]+':'+fDirStats.FileInfoFromIndex[i].GetData;
+end;
+
+function TPathInfo.dumpJSON() : AnsiString;
+var i : integer;
+begin
+	Result := '{ "Name" : "'+StringReplace(PathName,'\','\\',[rfReplaceAll])+'", '+
+              '"Group" : "'+GroupName+'", '+
+              '"Specific" : "'+SpecificName+'", '+
+              fDirStats.GetJSON() + 
+              '}';
 end;
 
 end.

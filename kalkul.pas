@@ -46,7 +46,7 @@ else
 
 if (Depth>0) or (Params.SettingsDrillDown) then
 	begin
-	//Writeln('Ajoute '+FileSpec);
+	// Writeln('Ajoute '+FileSpec);
 	WSpecific := Params.FindSpecificByPath(FileSpec);
 	WGpName := Params.FindGroupByPath(FileSpec);
 	// si on trouve un paramètre Path Spécifique
@@ -57,9 +57,14 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 		KeyFilespec := FileSpec;
 		Depth := Params.SettingsDepth;
 	end;
-	PI := Tree.AddPathInfo(KeyFileSpec);
+	PI := Tree.AddPathInfo(LowerCase(KeyFileSpec));
 	if WGpName <> '' then
 	  GroupName := WGpName;
+	if PI.State = tpisConfigured then
+	begin
+		PI.State := tpisFound;  
+		Depth := Params.SettingsDepth;
+	end;
 
 	If FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0 then
 	    begin
@@ -79,13 +84,10 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 			    	// PI Gère un Item
 			    	LimIndex := Params.GetLimitIndex(Info);
 			    	TypeExt := Params.GetExtensionType(lowerCase(ExtractFileExt(Info.Name)),GroupName);
-			    	//Writeln('TypeExtension de ',lowerCase(ExtractFileExt(Info.Name)),',',GroupName,' = ',TypeExt);
-			    	//if GroupName<>'' then
-			    	//	Writeln('TypeExt = [',TypeExt,'] pour ',lowerCase(ExtractFileExt(Info.Name)),' dans ',GroupName);
-			    	PI.AddSizeExtension(Info,LimIndex,TypeExt);
 			    	Params.SourceSet.AddSizeFromInfo(Info,LimIndex,TypeExt,Src); // gère x Items
 			    	Params.GroupSet.AddSizeFromInfo(Info,LimIndex,TypeExt,GroupName); // gère x Items
 			    	Params.SpecificSet.AddSizeFromInfo(Info,LimIndex,TypeExt,WSpecific); // gère x Items
+			    	PI.AddSizeExtension(Info,LimIndex,TypeExt,Params.SettingsKeepUDetails,GroupName,WSpecific);
 		    	end;
 			end;
 	    Until FindNext(info)<>0;
@@ -138,9 +140,38 @@ begin
 //	Comp.Write(@Buf[1],Length(Buf));
 end;	
 
+procedure SavePathJSON(fName : String);
+var srcfile : TextFile;
+var Ordinateur : string;
+//Dest : TStream;
+//Encode : TEncodingStream;
+//Comp :TCompressionStream;
+// Buf : Array[1..SomeSize] of byte;
+//zip : tzipper;
+begin
+	Ordinateur := GetComputerNetName;
+	assignfile(srcfile, Ordinateur+'_'+fName+'.json');
+	rewrite(srcfile);
+	Writeln(srcfile,'{ "computername" : "'+Ordinateur+'", '+
+					'"start_at" : "'+ DateTime2XMLDateTime(Start) + '", ' +
+					'"stop_at" : "'+ DateTime2XMLDateTime(Now) + '", ');
+	Writeln(srcfile,Params.SettingsGetJSON+',  ');
+	Writeln(srcfile,Params.Unities.GetJSON+',  ');
+	Writeln(srcfile,Tree.UnknownGetJSON+'}');
+	closefile(srcfile);
+
+//	zip := tzipper.create;
+
+//	Dest:=CreateDestStream;
+//	Encode:=TEncodingStream.Create(Dest);
+//	Comp:=TCompressionStream.Create(Encode);
+//	Comp.Write(@Buf[1],Length(Buf));
+end;	
+
+
 Var K : Qword;
 Var DateMe, UDate : TdateTime;
-Var SDateMe : String;
+Var MissedPaths : String;
 var SystemTime: TSystemTime;
 
 Begin
@@ -157,9 +188,26 @@ Begin
 		Writeln(IntToStr(ProcessTree(Src,ExtractWord(i,Params.SettingsSrc,[','])+':','',Params.SettingsDepth,'')) + ' files');
 	end;
 
+	MissedPaths := Tree.GetMissedPaths;
+	if MissedPaths<>'' then
+	begin
+		// Writeln('Missed Path:'+MissedPaths);
+		Writeln('Processing missed paths... -> ');
+		imax := WordCount(MissedPaths,['|']);
+		for i := 1 to imax do
+		begin
+			Src := ExtractWord(i,MissedPaths,['|']);
+			Write(Src[1] + ':\ -> ['+ Src +']');
+			Writeln(IntToStr(ProcessTree(Src[1],Copy(Src,1,Pred(length(Src))),'',Params.SettingsDepth,'')) + ' files');
+		end;
+	end;
+
 	SaveJSON('sources',Params.SourceSet);
 	SaveJSON('groupes',Params.GroupSet);
 	SaveJSON('specific',Params.SpecificSet);
+
+	if Params.SettingsKeepUDetails then
+		SavePathJSON('paths');
 
 	Params.free;
 	Tree.free;

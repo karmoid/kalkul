@@ -10,7 +10,6 @@ interface
 uses Classes,
 	InternalTypes,
 	Unities,
-	Filekind,
 	ExtensionTypeManager,
 	PathsAndGroupsManager,
 	SpecificPaths,	
@@ -24,7 +23,6 @@ type
 	TAppParams = class
 	private
 		IniF : TIniFile;
-		fExtensions : TFileKind;
 		fUnity : TUnityList;
 		fSettingsSrc : WideString;
 		fSettingsDepth :Integer;
@@ -65,7 +63,6 @@ type
 		property SettingsDepth: Integer read FSettingsDepth write FSettingsDepth;
 		property SettingsKeepUDetails: Boolean read FSettingsKeepUDetails write FSettingsKeepUDetails;
 		property SettingsDrillDown: Boolean read fSettingsDrillDown write fSettingsDrillDown;
-		property Extensions: TFileKind read FExtensions;
 		property SpecificPaths: TSpecificPaths read GetSpecificPaths;
 		property SourceSet : tFileInfoSet read fSourceSet;
 		property GroupSet : tFileInfoSet read fGroupSet;
@@ -109,7 +106,6 @@ constructor TAppParams.Create(fName : String);
 	begin
 	fUnity := TUnityList.Create();
 	IniF := TIniFile.create(fName,False);
-	fExtensions := TFileKind.create;
 	//fSpecificPaths := TStringList.create;
 	//fSpecificPaths.OwnsObjects := True;
 	fExtensionTypeManager := TExtensionTypeManager.Create();
@@ -137,7 +133,6 @@ destructor TAppParams.Destroy;
 	fUnity.free;
 	//writeln(fSpecificPaths.DelimitedText);
 	//fSpecificPaths.free;
-	fExtensions.free;
 	IniF.free;
 	fExtensionTypeManager.free;
 	fPathAndGroupManager.free;

@@ -49,12 +49,9 @@ var Ext : string;
 begin
 	if (TypeExt='') and KeepUnknown then
 	begin
-		Ext := lowerCase(ExtractFileExt(Info.Name));
-		if Length(Ext)>4 then
-		begin
-			Ext := Copy(Ext,1,5);
+		Ext := Copy(lowerCase(ExtractFileExt(Info.Name)),1,5);
+		if Length(ExtractFileExt(Info.Name))>5 then
 			Ext[5] := '*';
-		end;
 		TypeExt := '!na'+Ext;
 		LimIndex := 0;
 		GroupName := GpName;

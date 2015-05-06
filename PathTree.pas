@@ -105,14 +105,14 @@ var Node : TAVLTreeNode;
 			Node := fTree.find(PI);
 			if assigned(Node) then
 			begin
-				writeln('Find "',Name,'" give ',TPathInfo(Node.Data).PathName);
+				// writeln('Find "',Name,'" give ',TPathInfo(Node.Data).PathName);
 				PI.free;
 				PI := TPathInfo(Node.Data);
 				PI.State := tpisFound;
 			end
 			else
 			begin
-				writeln('Find "',Name,'" give nothing. Create Node');
+				// writeln('Find "',Name,'" give nothing. Create Node');
 				Node := fTree.Add(PI);
 			end;	
 			Result := PI;

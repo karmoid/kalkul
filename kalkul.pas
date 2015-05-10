@@ -62,37 +62,39 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 	  GroupName := WGpName;
 	if PI.State = tpisConfigured then
 	begin
-		PI.State := tpisFound;  
+		// PI.State := tpisFound;  
 		Depth := Params.SettingsDepth;
 	end;
 
-	If FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0 then
+	If (PI.State in [tpisNone, tpisConfigured]) and 
+	   (FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0) then
 	    begin
-	    Repeat
-	    	Inc(Count);
-	    	With Info do
-	    	begin
-		    If (Attr and faDirectory) = faDirectory then
-		        begin
-//			        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec+Name+'\',Depth-1,GroupName);
-			        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec,Name,Depth-1,GroupName);
-		        end
-		    else
-			    begin
-			    	// remplacer Ext par ExtractFileExt(Info.Name)
-			    	// Params.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
-			    	// PI Gère un Item
-			    	LimIndex := Params.GetLimitIndex(Info);
-			    	TypeExt := Params.GetExtensionType(lowerCase(ExtractFileExt(Info.Name)),GroupName);
-			    	Params.SourceSet.AddSizeFromInfo(Info,LimIndex,TypeExt,Src); // gère x Items
-			    	Params.GroupSet.AddSizeFromInfo(Info,LimIndex,TypeExt,GroupName); // gère x Items
-			    	Params.SpecificSet.AddSizeFromInfo(Info,LimIndex,TypeExt,WSpecific); // gère x Items
-			    	PI.AddSizeExtension(Info,LimIndex,TypeExt,Params.SettingsKeepUDetails,GroupName,WSpecific);
-		    	end;
-			end;
-	    Until FindNext(info)<>0;
+		    Repeat
+		    	Inc(Count);
+		    	With Info do
+		    	begin
+			    If (Attr and faDirectory) = faDirectory then
+			        begin
+	//			        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec+Name+'\',Depth-1,GroupName);
+				        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec,Name,Depth-1,GroupName);
+			        end
+			    else
+				    begin
+				    	// remplacer Ext par ExtractFileExt(Info.Name)
+				    	// Params.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
+				    	// PI Gère un Item
+				    	LimIndex := Params.GetLimitIndex(Info);
+				    	TypeExt := Params.GetExtensionType(lowerCase(ExtractFileExt(Info.Name)),GroupName);
+				    	Params.SourceSet.AddSizeFromInfo(Info,LimIndex,TypeExt,Src); // gère x Items
+				    	Params.GroupSet.AddSizeFromInfo(Info,LimIndex,TypeExt,GroupName); // gère x Items
+				    	Params.SpecificSet.AddSizeFromInfo(Info,LimIndex,TypeExt,WSpecific); // gère x Items
+				    	PI.AddSizeExtension(Info,LimIndex,TypeExt,Params.SettingsKeepUDetails,GroupName,WSpecific);
+			    	end;
+				end;
+		    Until FindNext(info)<>0;
+		FindClose(Info);
+		PI.state := tpisFilled;
 	    end;
-	FindClose(Info);
 	end;
 Result := Count;
 end;

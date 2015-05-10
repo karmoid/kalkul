@@ -108,7 +108,7 @@ var Node : TAVLTreeNode;
 				// writeln('Find "',Name,'" give ',TPathInfo(Node.Data).PathName);
 				PI.free;
 				PI := TPathInfo(Node.Data);
-				PI.State := tpisFound;
+				// PI.State := tpisFound;
 			end
 			else
 			begin

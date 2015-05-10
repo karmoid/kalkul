@@ -118,11 +118,13 @@ var Ordinateur : string;
 //Comp :TCompressionStream;
 // Buf : Array[1..SomeSize] of byte;
 var Buf : AnsiString;
+var ts : string;
 //zip : tzipper;
 begin
+	ts := getTimeStampString();
 	Ordinateur := GetComputerNetName;
 	buf := List.GetJSON;
-	assignfile(srcfile, Ordinateur+'_'+fName+'.json');
+	assignfile(srcfile, Ordinateur+'_'+fName+ts+'.json');
 	rewrite(srcfile);
 	Writeln(srcfile,'{ "computername" : "'+Ordinateur+'", '+
 					'"start_at" : "'+ DateTime2XMLDateTime(Start) + '", ' +
@@ -143,14 +145,16 @@ end;
 procedure SavePathJSON(fName : String);
 var srcfile : TextFile;
 var Ordinateur : string;
+var ts : string;
 //Dest : TStream;
 //Encode : TEncodingStream;
 //Comp :TCompressionStream;
 // Buf : Array[1..SomeSize] of byte;
 //zip : tzipper;
 begin
+	ts := getTimeStampString();
 	Ordinateur := GetComputerNetName;
-	assignfile(srcfile, Ordinateur+'_'+fName+'.json');
+	assignfile(srcfile, Ordinateur+'_'+fName+ts+'.json');
 	rewrite(srcfile);
 	Writeln(srcfile,'{ "computername" : "'+Ordinateur+'", '+
 					'"start_at" : "'+ DateTime2XMLDateTime(Start) + '", ' +
@@ -206,8 +210,8 @@ Begin
 	SaveJSON('groupes',Params.GroupSet);
 	SaveJSON('specific',Params.SpecificSet);
 
-	if Params.SettingsKeepUDetails then
-		SavePathJSON('paths');
+//	if Params.SettingsKeepUDetails then
+	SavePathJSON('paths');
 
 	Params.free;
 	Tree.free;

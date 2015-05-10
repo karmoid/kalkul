@@ -56,6 +56,7 @@ type TFileInfoArray = class
 		property Count : Integer read GetCount;
 	end;
 
+function getTimeStampString : String;
 function GetSizeHRb(fSize : uInt64): WideString;
 function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
@@ -70,10 +71,16 @@ var SizeLimit : integer = 0;
 const cIntlDateTimeStor = 'yyyy-mm-dd hh:mm:ss';    // for storage 
 const cIntlDateTimeDisp = 'yyyy-mm-dd hh:mm:ss';  // for display 
 const cIntlDateDisp     = 'yyyy-mm-dd';  // for display 
+const cIntlDateFile     = 'yyyymmddhhnnss';  // for file
 
 implementation
 uses DateUtils,
      StrUtils;
+
+function getTimeStampString : String;
+begin
+	Result := FormatDateTime(cIntlDateFile,Now);
+end;
 
 function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime; 
 var 

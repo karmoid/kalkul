@@ -1,6 +1,7 @@
 unit InternalTypes;
 interface
 uses Windows,
+	regexpr,
 	SysUtils;
 
 type TUInt64 = class
@@ -64,6 +65,10 @@ function NormalizePath(S : String) : String;
 function GetComputerNetName: string;
 function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime; 
 function DateTime2XMLDateTime(const vDateTime: TDateTime): AnsiString; 
+function RegularExpression(ExtValue : AnsiString): Boolean;
+function GetExtensionTypeFromRegExp(ExtValue : AnsiString; fName : AnsiString; GName : AnsiString) : Ansistring;
+function GetDiskSize(drive: Char; var free_size, total_size: Int64): Boolean;
+
 
 const virguleLast : array[Boolean] of string = ('',',');
 const cTrueFalse : array[Boolean] of string = ('False','True');
@@ -72,10 +77,79 @@ const cIntlDateTimeStor = 'yyyy-mm-dd hh:mm:ss';    // for storage
 const cIntlDateTimeDisp = 'yyyy-mm-dd hh:mm:ss';  // for display 
 const cIntlDateDisp     = 'yyyy-mm-dd';  // for display 
 const cIntlDateFile     = 'yyyymmddhhnnss';  // for file
-
+var Regex: TRegExpr;
 implementation
 uses DateUtils,
      StrUtils;
+
+function GetDiskSize(drive: Char; var free_size, total_size: Int64): Boolean;
+var
+  RootPath: array[0..4] of Char;
+  RootPtr: PChar;
+  current_dir: string;
+begin
+  RootPath[0] := Drive;
+  RootPath[1] := ':';
+  RootPath[2] := '\';
+  RootPath[3] := #0;
+  RootPtr := RootPath;
+  current_dir := GetCurrentDir;
+  if SetCurrentDir(drive + ':\') then
+  begin
+    GetDiskFreeSpaceEx(RootPtr, Free_size, Total_size, nil);
+    // this to turn back to original dir
+    SetCurrentDir(current_dir);
+    Result := True;
+  end
+  else
+  begin
+    Result := False;
+    Free_size  := -1;
+    Total_size := -1;
+  end;
+end;
+
+function RegularExpression(ExtValue : AnsiString): Boolean;
+begin
+	Result := ((copy(ExtValue,1,1) = '/') or 
+				(copy(ExtValue,1,2) = '~/')) and
+	    		(copy(ExtValue,Length(ExtValue),1)='/');
+end;
+
+function GetExtensionTypeFromRegExp(ExtValue : AnsiString; fName : AnsiString; GName : AnsiString) : Ansistring;
+var match : boolean;
+var ExpR : Ansistring;
+begin
+	result := '';
+	if RegularExpression(ExtValue) then
+	begin
+		match := ExtValue[1]='~';
+		if match then
+		begin
+			ExpR := copy(ExtValue,3,Length(ExtValue)-3);
+			// writeln('On vient de trouver un Match avec '+ExpR);
+  			Regex.Expression := ExpR;
+  			regex.Exec(fname);
+  			if regex.SubExprMatchCount = 1 then
+  			begin
+  				Result := GName+'_'+regex.Match[1];
+  				// writeln('-> ', Result);
+  			end;
+		end
+		else
+		begin
+			ExpR := copy(ExtValue,2,Length(ExtValue)-2);
+			// writeln('On vient de trouver un scan avec '+ExpR);
+  			Regex.Expression := ExpR;
+  			if regex.Exec(fname) then
+  			begin
+  				Result := GName;
+  				// writeln('->',Result);
+  			end;
+  				
+		end;
+	end;
+end;
 
 function getTimeStampString : String;
 begin

@@ -55,7 +55,7 @@ type
 		function AddSizeExtension(key : string; info : TSearchRec; WithDetails: Boolean; GName : String): UInt64;
 		function FindGroupByPath(S : String) : string;
 		function FindSpecificByPath(S : String) : string;
-		function GetExtensionType(Ext : String; GName : string) : string;
+		function GetExtensionType(fname : String; GName : string) : string;
 		function GetLimitIndex(info : TSearchRec) : Integer;
 		function SettingsGetJSON : AnsiString;
 		property Unities: tUnityList read fUnity;
@@ -162,6 +162,7 @@ procedure TAppParams.LoadExtensions();
 var Sections : TStringList;
 	Counter, SectionIndex : Integer;
 	Values : TStringList;	
+	ExtValue : string;
 
 begin
 	try 
@@ -174,13 +175,20 @@ begin
 		for Counter := 0 to Pred(Sections.count) do
         if Sections.Names[Counter][1]<>cComment then
 		begin
-			Values := TStringList.create();
-			Values.CommaText := Sections.ValueFromIndex[Counter];
-			ExtensionTypeManager.AddExtensionType(Sections.Names[Counter]);
-	  		for SectionIndex := 0 to Pred(Values.count) do
-	  		begin
-	  			ExtensionTypeManager.AddExtension('.'+Values.ValueFromIndex[SectionIndex],Sections.Names[Counter]);
-	  		end;
+			ExtValue := Sections.ValueFromIndex[Counter];
+			if RegularExpression(ExtValue) then
+
+			else   
+
+			begin
+				Values := TStringList.create();
+				Values.CommaText := Sections.ValueFromIndex[Counter];
+				ExtensionTypeManager.AddExtensionType(Sections.Names[Counter]);
+		  		for SectionIndex := 0 to Pred(Values.count) do
+		  		begin
+		  			ExtensionTypeManager.AddExtension('.'+Values.ValueFromIndex[SectionIndex],Sections.Names[Counter]);
+		  		end;
+			end;
 		end;
 		Sections.free;
 	except
@@ -252,6 +260,7 @@ var Sections : TStringList;
 	wPaths : TStringList;
 	ExtensionTypeMan : TExtensionTypeManager;
 	Values : TStringList;	
+	ExtValue : String;
 
 begin
 	Sections := TStringList.create();
@@ -261,11 +270,21 @@ begin
 	for Counter := 0 to Pred(Sections.count) do
     if Sections.Names[Counter][1]<>cComment then
 	begin
-		Values := TStringList.create();
-		Values.CommaText := Sections.ValueFromIndex[Counter];
-		ExtensionTypeMan.AddExtensionType(Sections.Names[Counter]);
-	  	for SectionIndex := 0 to Pred(Values.count) do
-	  		ExtensionTypeMan.AddExtension('.'+Values.ValueFromIndex[SectionIndex],Sections.Names[Counter]);
+		ExtValue := Sections.ValueFromIndex[Counter];
+		// writeln('Group Option : Test Expression Reguliere : ',ExtValue);
+		if RegularExpression(ExtValue) then
+		begin
+			ExtensionTypeMan.AddExtensionType(Sections.Names[Counter]);
+	  		ExtensionTypeMan.AddExtension(ExtValue,Sections.Names[Counter]);
+	  	end	
+		else
+		begin
+			Values := TStringList.create();
+			Values.CommaText := Sections.ValueFromIndex[Counter];
+			ExtensionTypeMan.AddExtensionType(Sections.Names[Counter]);
+		  	for SectionIndex := 0 to Pred(Values.count) do
+		  		ExtensionTypeMan.AddExtension('.'+Values.ValueFromIndex[SectionIndex],Sections.Names[Counter]);
+		end;
 	end;
 	Sections.free;
 end;
@@ -306,9 +325,10 @@ var Obj : TDirectoryStat;
 var i : integer;
 begin
 	Result := 0; // Extensions.AddSizeExtension(key,size,WithDetails);
-	ExtType := PathAndGroupManager.GetExtensionType(Key,GName);
+//	ExtType := PathAndGroupManager.GetExtensionType(Key,GName);
+	ExtType := PathAndGroupManager.GetExtensionType(info.name,GName);
 	if ExtType='' then
-		ExtType := ExtensionTypeManager.GetExtensionType(Key);
+		ExtType := ExtensionTypeManager.GetExtensionType(info.name);
 	if ExtType='' then
 		ExtType := '*any*';
 	i := fReportExtType.indexOf(ExtType);
@@ -356,11 +376,11 @@ begin
 	Result := PathAndGroupManager.Paths;
 end;
 
-function TAppParams.GetExtensionType(Ext : String; GName : string) : string;
+function TAppParams.GetExtensionType(fName : String; GName : string) : string;
 begin
-	Result := PathAndGroupManager.GetExtensionType(Ext,GName);
+	Result := PathAndGroupManager.GetExtensionType(Fname,GName);
 	if Result = '' then
-		Result := ExtensionTypeManager.GetExtensionType(Ext);
+		Result := ExtensionTypeManager.GetExtensionType(Fname);
 end;
 
 function TAppParams.GetLimitIndex(info : TSearchRec) : Integer;

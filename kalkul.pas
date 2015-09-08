@@ -20,6 +20,8 @@ Uses
 	DateUtils,
 	FileInfoSet,
 	InternalTypes,
+	DriveInfoSet,
+	regexpr,	
 	Zipper;
 
 Var Tree : TPathTree;
@@ -27,6 +29,7 @@ Var Tree : TPathTree;
 	Params : TAppParams;
     Src : String;
     Start : TdateTime;
+    DInfoSet : tDriveInfoSet;
 
 Const cIniFile = 'kalkul.ini';
 
@@ -84,7 +87,9 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 				    	// Params.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
 				    	// PI Gère un Item
 				    	LimIndex := Params.GetLimitIndex(Info);
-				    	TypeExt := Params.GetExtensionType(lowerCase(ExtractFileExt(Info.Name)),GroupName);
+//				    	TypeExt := Params.GetExtensionType(lowerCase(ExtractFileExt(Info.Name)),GroupName);
+						//writeln('cherche ',lowerCase(Info.Name),' groupe',GroupName);
+				    	TypeExt := Params.GetExtensionType(lowerCase(Info.Name),GroupName);
 				    	Params.SourceSet.AddSizeFromInfo(Info,LimIndex,TypeExt,Src); // gère x Items
 				    	Params.GroupSet.AddSizeFromInfo(Info,LimIndex,TypeExt,GroupName); // gère x Items
 				    	Params.SpecificSet.AddSizeFromInfo(Info,LimIndex,TypeExt,WSpecific); // gère x Items
@@ -133,6 +138,7 @@ begin
 					'"stop_at" : "'+ DateTime2XMLDateTime(Now) + '", ');
 	Writeln(srcfile,Params.SettingsGetJSON+',  ');
 	Writeln(srcfile,Params.Unities.GetJSON+',  ');
+	Writeln(srcfile,DInfoSet.GetJSON+',  ');
 	Writeln(srcfile,buf+'}');
 	closefile(srcfile);
 
@@ -179,10 +185,13 @@ Var K : Qword;
 Var DateMe, UDate : TdateTime;
 Var MissedPaths : String;
 var SystemTime: TSystemTime;
+var free_size, total_size: Int64;
 
 Begin
 	Start := now;
 	Params := TAppParams.create(cIniFile);
+  	Regex := TRegExpr.Create;
+  	DInfoSet := tDriveInfoSet.create;
 
 	//Params.DumpPaths;
   	Tree := PopulateTree;
@@ -191,6 +200,8 @@ Begin
 	begin
 		Src := ExtractWord(i,Params.SettingsSrc,[',']);
 		Write('Processing... ' + Src + ':\ -> ');
+		if GetDiskSize(Src[1], free_size, total_size) then
+			DInfoSet.AddSizeFromSize(total_size, free_size, Src);
 		Writeln(IntToStr(ProcessTree(Src,ExtractWord(i,Params.SettingsSrc,[','])+':','',Params.SettingsDepth,'')) + ' files');
 	end;
 
@@ -216,5 +227,7 @@ Begin
 	SavePathJSON('paths');
 
 	Params.free;
+	DInfoSet.free;
+	Regex.free;
 	Tree.free;
 End.

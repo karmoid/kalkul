@@ -11,14 +11,16 @@ uses Classes,
 type
 	TExtensionTypes = class(TStringList)
 	protected
-		// (object associé) fMyExtensions : TExtensions;
 
 	private
+		function GetExpression(i : integer) : AnsiString;
+		procedure SetExpression(i : integer; Value : AnsiString);
 
 	public
 		constructor Create(); 
 		destructor Destroy; override;
 		function AddUnique(S : String) : Integer; 
+		property Expression[i: integer] : AnsiString read GetExpression write SetExpression;
 	end; 	
 
 	EExtensionTypesNotUnique = class(Exception);
@@ -46,5 +48,15 @@ begin
 		on EStringListError do raise EExtensionTypesNotUnique.create('['+S+'] Duplicates');
 	end;	
 end;
+
+function TExtensionTypes.GetExpression(i : integer) : AnsiString;
+	begin
+		Result := ValueFromIndex[i];
+	end;
+
+procedure TExtensionTypes.SetExpression(i : integer; Value : AnsiString);
+	begin
+		ValueFromIndex[i] := Value;
+	end;
 
 end.

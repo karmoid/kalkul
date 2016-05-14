@@ -413,8 +413,12 @@ end;
 function TAppParams.IsPathExcluded(Gname : string; Path : String) : boolean;
 begin
 	Result := false;
-	if Assigned(ExcludeIncludeRegExp[GName]) then
-		Result := ExcludeIncludeRegExp[GName].IsPathExcluded(Path);
+	if GName<>'' then
+		begin
+		// writeln('On teste pour le groupe '+Gname+' si le Path '+Path+' est exclu ou inclus ?');
+		if Assigned(ExcludeIncludeRegExp[GName]) then
+			Result := ExcludeIncludeRegExp[GName].IsPathExcluded(Gname,Path);
+	end;
 end;
 
 function TAppParams.SettingsGetJSON : AnsiString;

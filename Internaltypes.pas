@@ -11,7 +11,7 @@ type TUInt64 = class
 		function GetFromKByteToHR : string;
 	public
 		constructor Create(Val : UInt64);
-		property Value: UInt64 read FValue write FValue;	
+		property Value: UInt64 read FValue write FValue;
 		function Add(Val : UInt64) : UInt64;
 		property FromByteToHR : String Read GetFromByteToHR;
 		property FromKByteToHR : String Read GetFromKByteToHR;
@@ -31,9 +31,9 @@ type TFileInfo = class
 		function GetData : string;
 		function GetJSON : AnsiString;
 		property nbfile: uInt64 read Fnbfile write Fnbfile;
-		property minSize: UInt64 read FMinSize write FMinSize;	
-		property MaxSize: UInt64 read FMaxSize write FMaxSize;	
-		property TotalSize: UInt64 read FTotalSize write FTotalSize;	
+		property minSize: UInt64 read FMinSize write FMinSize;
+		property MaxSize: UInt64 read FMaxSize write FMaxSize;
+		property TotalSize: UInt64 read FTotalSize write FTotalSize;
 		property MinCreateDT: TDateTime read FMinCreateDT write FMinCreateDT;
 		property MinAccessDT: TDateTime read FMinAccessDT write FMinAccessDT;
 		property MinModifyDT: TDateTime read FMinModifyDT write FMinModifyDT;
@@ -63,8 +63,8 @@ function GetSizeHRk(fSize : uInt64): WideString;
 function EvaluateUnity(Valyou : string): UInt64;
 function NormalizePath(S : String) : String;
 function GetComputerNetName: string;
-function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime; 
-function DateTime2XMLDateTime(const vDateTime: TDateTime): AnsiString; 
+function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime;
+function DateTime2XMLDateTime(const vDateTime: TDateTime): AnsiString;
 function RegularExpression(ExtValue : AnsiString): Boolean;
 function GetExtensionTypeFromRegExp(ExtValue : AnsiString; fName : AnsiString; GName : AnsiString) : Ansistring;
 function GetDiskSize(drive: Char; var free_size, total_size: Int64): Boolean;
@@ -73,9 +73,9 @@ function GetDiskSize(drive: Char; var free_size, total_size: Int64): Boolean;
 const virguleLast : array[Boolean] of string = ('',',');
 const cTrueFalse : array[Boolean] of string = ('False','True');
 var SizeLimit : integer = 0;
-const cIntlDateTimeStor = 'yyyy-mm-dd hh:mm:ss';    // for storage 
-const cIntlDateTimeDisp = 'yyyy-mm-dd hh:mm:ss';  // for display 
-const cIntlDateDisp     = 'yyyy-mm-dd';  // for display 
+const cIntlDateTimeStor = 'yyyy-mm-dd hh:mm:ss';    // for storage
+const cIntlDateTimeDisp = 'yyyy-mm-dd hh:mm:ss';  // for display
+const cIntlDateDisp     = 'yyyy-mm-dd';  // for display
 const cIntlDateFile     = 'yyyymmddhhnnss';  // for file
 var Regex: TRegExpr;
 implementation
@@ -111,7 +111,7 @@ end;
 
 function RegularExpression(ExtValue : AnsiString): Boolean;
 begin
-	Result := ((copy(ExtValue,1,1) = '/') or 
+	Result := ((copy(ExtValue,1,1) = '/') or
 				(copy(ExtValue,1,2) = '~/')) and
 	    		(copy(ExtValue,Length(ExtValue),1)='/');
 end;
@@ -141,12 +141,13 @@ begin
 			ExpR := copy(ExtValue,2,Length(ExtValue)-2);
 			// writeln('On vient de trouver un scan avec '+ExpR);
   			Regex.Expression := ExpR;
+				// writeln('RegEx sur ',fname,' avec ',ExpR);
   			if regex.Exec(fname) then
   			begin
   				Result := GName;
   				// writeln('->',Result);
   			end;
-  				
+
 		end;
 	end;
 end;
@@ -156,31 +157,31 @@ begin
 	Result := FormatDateTime(cIntlDateFile,Now);
 end;
 
-function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime; 
-var 
-  DateOnly: String; 
-  TimeOnly: String; 
-  TPos: Integer; 
-begin 
-	TPos := Pos(' ', XMLDateTime); 
-	if TPos <> 0 then 
+function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime;
+var
+  DateOnly: String;
+  TimeOnly: String;
+  TPos: Integer;
+begin
+	TPos := Pos(' ', XMLDateTime);
+	if TPos <> 0 then
 	begin
     	DateOnly := Copy(XMLDateTime, 1, TPos - 1);
     	TimeOnly := Copy(XMLDateTime, TPos + 1, Length(XMLDateTime));
-		TPos := Pos(' ', TimeOnly); 
-		if TPos <> 0 then 
+		TPos := Pos(' ', TimeOnly);
+		if TPos <> 0 then
 			TimeOnly := Copy(TimeOnly, 1, TPos - 1);
-  		Result := ScanDateTime('yyyy-mm-dd hh:nn:ss', DateOnly+' '+TimeOnly); 
+  		Result := ScanDateTime('yyyy-mm-dd hh:nn:ss', DateOnly+' '+TimeOnly);
 	end
-	else 
+	else
 	begin
-    	DateOnly := XMLDateTime; 
-		Result := ScanDateTime('yyyy-mm-dd', DateOnly); 
+    	DateOnly := XMLDateTime;
+		Result := ScanDateTime('yyyy-mm-dd', DateOnly);
 	end;
-end; 
+end;
 
 
-function DateTime2XMLDateTime(const vDateTime: TDateTime): AnsiString; 
+function DateTime2XMLDateTime(const vDateTime: TDateTime): AnsiString;
 var offset : integer;
 const Signs : array[-1..1] of char = ('+',' ','-');
 begin
@@ -206,7 +207,7 @@ begin
 		ADT := FileTimeToDTime(FindData.ftLastAccessTime);
 		MDT := FileTimeToDTime(FindData.ftLastWriteTime);
 		SZ := Size;
-	end;	
+	end;
 end;
 
 function GetComputerNetName: string;
@@ -220,7 +221,7 @@ begin
   begin
     Result := StrPas(@buffer[1]);
 
-  end  
+  end
   else
     Result := ''
 end;
@@ -264,17 +265,17 @@ begin
 	begin
 		Result := Result + virg + '{ "Index": '+IntToStr(i)+', '+FileINfo[i].GetJSON+' }';
 		virg := ', ';
-	end;	
+	end;
 	Result := Result + ']';
 end;
 
 constructor Tfileinfo.Create;
 begin
-	fMinCreateDT := maxDateTime;	
-	fMinAccessDT := maxDateTime;	
-	fMinModifyDT := maxDateTime;	
-	fMaxCreateDT := minDateTime;	
-	fMaxAccessDT := minDateTime;	
+	fMinCreateDT := maxDateTime;
+	fMinAccessDT := maxDateTime;
+	fMinModifyDT := maxDateTime;
+	fMaxCreateDT := minDateTime;
+	fMaxAccessDT := minDateTime;
 	fMaxModifyDT := minDateTime;
 	fmaxsize := 0;
 	fminsize := high(uInt64);
@@ -286,7 +287,7 @@ function Tfileinfo.GetData : string;
 begin
 	if nbfile=0 then
 		Result := 'NbF:0'
-	else	
+	else
 		Result := 'MinCD:'+DateTimeToStr(MinCreateDT)+', '+
 			  'MaxCD:'+DateTimeToStr(MaxCreateDT)+', '+
 			  'MinAD:'+DateTimeToStr(MinAccessDT)+', '+
@@ -322,7 +323,7 @@ begin
 		minSize := SZ;
 	if SZ>MaxSize then
 		MaxSize := SZ;
-	result := TotalSize;	
+	result := TotalSize;
 end;
 
 Procedure TFileInfo.SetMinMaxDate(SDate : TDateTime; var Mindate, maxDate : TDateTime);
@@ -330,7 +331,7 @@ begin
 	if SDate>maxDate then
 		maxDate := SDate;
 	if SDate<Mindate then
-		Mindate := SDate;	
+		Mindate := SDate;
 end;
 
 function TFileInfoArray.TakeAccount(Info : TSearchRec; LimIndex : Integer) : uInt64;
@@ -342,12 +343,12 @@ begin
 	  FileInfo[LimIndex] := TFileInfo.Create;
 	with FileInfo[LimIndex] do
 	begin
-		nbfile := nbfile + 1;	
+		nbfile := nbfile + 1;
 		SetMinMaxDate(CDT,fMinCreateDT,fMaxCreateDT);
 		SetMinMaxDate(ADT, fMinAccessDT,fmaxAccessDT);
 		SetMinMaxDate(MDT,fminModifyDT,fmaxModifyDT);
 		Result := SetNewSize(SZ);
-	end;  
+	end;
 end;
 
 function StrToUInt64(const S: String): UInt64;
@@ -390,7 +391,7 @@ var Valeur : UInt64;
 			if not (Valyou[Pos] in ['0'..'9']) then
 			  Break;
 			Inc(Pos);
-		end;	
+		end;
 		try
 			if Pos<=Length(Valyou) then
 			begin
@@ -402,7 +403,7 @@ var Valeur : UInt64;
 					'g': Unite := 1 << 30;
 					't': Unite := 1 << 40;
 					'p': Unite := 1 << 50;
-					else 
+					else
 						Unite := 0;
 				end;
 				Valeur := StrToUInt64(LeftStr(Valyou,Pos-1));
@@ -412,7 +413,7 @@ var Valeur : UInt64;
 				unite := 1;
 				Valeur := StrToUInt64(Valyou);
 			end;
-			Result := Unite * Valeur;	
+			Result := Unite * Valeur;
 		except on e: EConvertError do
 				writeln('Exception ConvertError on ('+ValYou+') : Pos=',Pos,', "',e.message,'"');
 		end;
@@ -433,10 +434,10 @@ begin
 	while (index<=6) and (isize>1024) do
 	begin
 		index := index + 1;
-		isize := isize div 1024;	
+		isize := isize div 1024;
 		divider := divider << 10;
 	end;
-	result := IntToStr(isize);	
+	result := IntToStr(isize);
 	if (isize>0) and (fSize mod (isize*divider) > 0) then
 	begin
 		Result := Result + ',' + LeftStr(IntToStr(fSize mod (isize*divider))+'00',3);
@@ -469,7 +470,7 @@ function TUInt64.Add(Val : UInt64): UInt64;
 	begin
 		FValue := FValue + Val;
 		Result := FValue;
-	end;	
+	end;
 
 function TUInt64.GetFromByteToHR : string;
 begin

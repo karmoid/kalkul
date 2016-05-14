@@ -68,8 +68,12 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 		// PI.State := tpisFound;
 		Depth := Params.SettingsDepth;
 	end;
+	// writeln('on traite le path '+PI.PathName);
 	if Params.IsPathExcluded(GroupName,PI.PathName) then
-		PI.State := tpisExcluded
+		begin
+		PI.State := tpisExcluded;
+		writeln(PI.PathName,' Excluded');
+		end
 	else
 	If (PI.State in [tpisNone, tpisConfigured]) and
 	   (FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0) then
@@ -201,7 +205,7 @@ Begin
 	for i := 1 to imax do
 	begin
 		Src := ExtractWord(i,Params.SettingsSrc,[',']);
-		Write('Processing... ' + Src + ':\ -> ');
+		WriteLn('Processing... ' + Src + ':\ -> ');
 		if GetDiskSize(Src[1], free_size, total_size) then
 			DInfoSet.AddSizeFromSize(total_size, free_size, Src);
 		Writeln(IntToStr(ProcessTree(Src,ExtractWord(i,Params.SettingsSrc,[','])+':','',Params.SettingsDepth,'')) + ' files');

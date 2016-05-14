@@ -13,8 +13,10 @@ begin
 //  regex.Expression:='^.*<(.*)\(((.*)(.)(.))\).*';
   regex.Expression:=ParamStr(1);
   texte := 'occ001.Split.010414.E07ALDI.DepotAgenceANGERS_BFCM_010414-1319.split.xml.formate.01042014132726';
-  writeln(texte);
-  regex.Exec(texte);
+  texte := 'g:\dev\railsprj\prj\carto\';
+  writeln('On cherche '+regex.Expression+' dans '+texte);
+  if regex.Exec(texte) then
+    writeln('Retourne TRUE');
   for i:=1 to regex.SubExprMatchCount do
     writeln(regex.Match[i]);
 

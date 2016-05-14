@@ -18,7 +18,7 @@ type TExtensionTypeManager = class
 		procedure AddExtensionType(ExtType : String);
 		procedure AddExtension(Ext : String; ExtType : String);
 		function GetExtensionType (S : String) : String;
-    function IsPathExcluded(Path: string) : Boolean;
+    function IsPathExcluded(Gname : String; Path: string) : Boolean;
 		procedure DumpExtensions();
     procedure AddIncExclPathRegExp(RegExpLabel : String; ExtRegExp : String);
 		property Extensions: TExtensions read FExtensions;
@@ -39,6 +39,7 @@ begin
 	fExtensionTypes := TExtensionTypes.Create();
 	fRegExpressions := TRegExpression.Create();
   fExceptAndIncludeExpr := TRegExpression.Create();
+  fExceptAndIncludeExpr.Sorted := False;
 end;
 
 destructor TExtensionTypeManager.Destroy;
@@ -71,8 +72,8 @@ begin
 	end	;
   if (Result='') and (Length(Ext)>4) then
   begin
-    Writeln('fic:',S);
-    writeln('Extension longue (' + IntToStr(Length(Ext))+ ') et pas de RegularExpression :  [' + Ext + ']');
+    // Writeln('fic:',S);
+    // writeln('Extension longue (' + IntToStr(Length(Ext))+ ') et pas de RegularExpression :  [' + Ext + ']');
   end;
 end;
 
@@ -98,16 +99,35 @@ begin
 		raise EExtensionsExceptRuleExists.create('['+RegExpLabel+'] ExceptInclude rule already set.');
 end;
 
-function TExtensionTypeManager.IsPathExcluded(Path: string) : Boolean;
+function TExtensionTypeManager.IsPathExcluded(GName : String; Path: string) : Boolean;
 var i : Integer;
+var Exclude, Found : Boolean;
+var DumpIt : Boolean;
 begin
-  Result := true;
-	Writeln(Path:60 , '':3,  'Action:':13);
+  Result := false;
+  DumpIt := false;
 	for i := 0 to pred(ExceptAndIncludeExpr.count) do
-		with Extensions do
+		with ExceptAndIncludeExpr do
     begin
-			Writeln(ValueFromIndex[i]:60,' = ':3, Names[i]:13);
-    end
+      Exclude := Names[i][1] = '-';
+      // Writeln('RegExp donne '+GetExtensionTypeFromRegExp(ValueFromIndex[i],Path,''));
+      Found := GetExtensionTypeFromRegExp(ValueFromIndex[i],Path,GName)<>'';
+      // DumpIt := DumpIt or Found;
+      If Found then
+        Result := Exclude;
+        // Writeln(ValueFromIndex[i]:60,cTrueFalse[Found]:8, cTrueFalse[Exclude]:8);
+    end;
+  if DumpIt then
+  begin
+    Writeln(Path:60 , 'Found':8,  'Exclude':8);
+  	for i := 0 to pred(ExceptAndIncludeExpr.count) do
+  		with ExceptAndIncludeExpr do
+      begin
+        Exclude := Names[i][1] = '-';
+        Found := GetExtensionTypeFromRegExp(ValueFromIndex[i],Path,Gname)<>'';
+        Writeln(ValueFromIndex[i]:60,cTrueFalse[Found]:8, cTrueFalse[Exclude]:8);
+      end
+  end;
 end;
 
 procedure TExtensionTypeManager.AddExtension(Ext : String; ExtType : String);

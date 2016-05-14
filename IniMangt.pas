@@ -12,7 +12,7 @@ uses Classes,
 	Unities,
 	ExtensionTypeManager,
 	PathsAndGroupsManager,
-	SpecificPaths,	
+	SpecificPaths,
 	Specificpath,
 	FileInfoSet,
 	SysUtils,
@@ -41,10 +41,11 @@ type
 		procedure LoadSettings();
 		procedure LoadSpecificPath();
 		procedure LoadSpecificGroup();
-		procedure LoadGroupOptions(GroupName : String);		
+		procedure LoadGroupOptions(GroupName : String);
 		function GetSpecificPaths : TSpecificPaths;
 		property ExtensionTypeManager: TExtensionTypeManager read FExtensionTypeManager write FExtensionTypeManager;
 		property PathAndGroupManager: TPathsAndGroupsManager read FPathAndGroupManager write FPathAndGroupManager;
+		function GetExceptIncludeRegExp(GName : string) : TExtensionTypeManager;
 
 	public
 		constructor Create(fName : String);
@@ -58,6 +59,7 @@ type
 		function GetExtensionType(fname : String; GName : string) : string;
 		function GetLimitIndex(info : TSearchRec) : Integer;
 		function SettingsGetJSON : AnsiString;
+		function IsPathExcluded(Gname : string; Path : String) : boolean;
 		property Unities: tUnityList read fUnity;
 		property SettingsSrc: WideString read FSettingsSrc write FSettingsSrc;
 		property SettingsDepth: Integer read FSettingsDepth write FSettingsDepth;
@@ -67,8 +69,9 @@ type
 		property SourceSet : tFileInfoSet read fSourceSet;
 		property GroupSet : tFileInfoSet read fGroupSet;
 		property SpecificSet : tFileInfoSet read fSpecificSet;
+		property ExcludeIncludeRegExp [GName : String] : TExtensionTypeManager read GetExceptIncludeRegExp;
 
-	end;	
+	end;
 
 implementation
 uses StrUtils,
@@ -77,6 +80,8 @@ uses StrUtils,
 
 Type tSections = (tsExtensions,tsDrives,tsSettings,tsSizes,tsSpecificPath,tsSpecificGroup,tsGroupOptions);
 Const cComment = ';';
+Const cExclude = '-';
+Const cInclude = '+';
 Const cSections : array [low(tSections)..high(tSections)] of String = (
 		'extensions',
 		'drives',
@@ -113,18 +118,18 @@ constructor TAppParams.Create(fName : String);
 	fReportExtType := TStringList.create();
 	fReportExtType.Duplicates := dupError;
 	fReportExtType.OwnsObjects := True;
-	fReportExtType.Sorted := True;	
+	fReportExtType.Sorted := True;
 	fSourceSet := tFileInfoSet.create;
 	fGroupSet := tFileInfoSet.create;
 	fSpecificSet := tFileInfoSet.create;
 
-// pas nécessaire ou obligatoire (valeur par défaut)	
+// pas nécessaire ou obligatoire (valeur par défaut)
 	InitializeIniFile;
 	LoadExtensions;
 	LoadSettings;
 	LoadUnities;
-	LoadSpecificPath; 
-	LoadSpecificGroup; 	
+	LoadSpecificPath;
+	LoadSpecificGroup;
 	end;
 
 destructor TAppParams.Destroy;
@@ -140,7 +145,7 @@ destructor TAppParams.Destroy;
 	fGroupSet.free;
 	fSourceSet.free;
 	fSpecificSet.free;
-	inherited Destroy;		
+	inherited Destroy;
 	end;
 
 procedure TAppParams.InitializeIniFile();
@@ -153,7 +158,7 @@ begin
 		begin
 			IniF.WriteString(cSections[tsExtensions],
 							 ExtractDelimited(1,cDefaultExt[Counter],['/']),
-							 ExtractDelimited(2,cDefaultExt[Counter],['/']));	
+							 ExtractDelimited(2,cDefaultExt[Counter],['/']));
 		end;
 	end;
 end;
@@ -161,11 +166,11 @@ end;
 procedure TAppParams.LoadExtensions();
 var Sections : TStringList;
 	Counter, SectionIndex : Integer;
-	Values : TStringList;	
+	Values : TStringList;
 	ExtValue : string;
 
 begin
-	try 
+	try
 		Sections := TStringList.create();
 
 		IniF.ReadSectionValues(cSections[tsExtensions], Sections);
@@ -178,7 +183,7 @@ begin
 			ExtValue := Sections.ValueFromIndex[Counter];
 			if RegularExpression(ExtValue) then
 
-			else   
+			else
 
 			begin
 				Values := TStringList.create();
@@ -192,12 +197,12 @@ begin
 		end;
 		Sections.free;
 	except
-		on e: EExtensionTypesNotUnique do 
-		begin 
+		on e: EExtensionTypesNotUnique do
+		begin
 			writeln('ExtensionType en double ! Msg->' + e.message);
 			raise;
 		end;
-	end;	
+	end;
 end;
 
 procedure TAppParams.LoadUnities();
@@ -243,7 +248,7 @@ begin
 		try
 			wPaths.Delimiter := ',';
 			wPaths.StrictDelimiter := True;
-			wPaths.Delimitedtext := Sections.ValueFromIndex[Counter];		
+			wPaths.Delimitedtext := Sections.ValueFromIndex[Counter];
 			// Important : Needed for Space in paths
 			for J := 0 to Pred(wPaths.count) do
 				PathAndGroupManager.AddPath(wPaths[J],Sections.Names[Counter]);
@@ -259,7 +264,7 @@ var Sections : TStringList;
 	Counter,SectionIndex : Integer;
 	wPaths : TStringList;
 	ExtensionTypeMan : TExtensionTypeManager;
-	Values : TStringList;	
+	Values : TStringList;
 	ExtValue : String;
 
 begin
@@ -269,23 +274,32 @@ begin
 	IniF.ReadSectionValues(GroupName+cSections[tsGroupOptions], Sections);
 	for Counter := 0 to Pred(Sections.count) do
     if Sections.Names[Counter][1]<>cComment then
-	begin
-		ExtValue := Sections.ValueFromIndex[Counter];
-		// writeln('Group Option : Test Expression Reguliere : ',ExtValue);
-		if RegularExpression(ExtValue) then
 		begin
-			ExtensionTypeMan.AddExtensionType(Sections.Names[Counter]);
-	  		ExtensionTypeMan.AddExtension(ExtValue,Sections.Names[Counter]);
-	  	end	
-		else
-		begin
-			Values := TStringList.create();
-			Values.CommaText := Sections.ValueFromIndex[Counter];
-			ExtensionTypeMan.AddExtensionType(Sections.Names[Counter]);
-		  	for SectionIndex := 0 to Pred(Values.count) do
-		  		ExtensionTypeMan.AddExtension('.'+Values.ValueFromIndex[SectionIndex],Sections.Names[Counter]);
+			ExtValue := Sections.ValueFromIndex[Counter];
+			// writeln('Group Option : ',ExtValue, ' Except, Include, ExtensionGroup Regular or not');
+			if Sections.Names[Counter][1] in [cInclude,cExclude] then
+			begin
+				// Group Options : Except, Include
+				if RegularExpression(ExtValue) then
+						ExtensionTypeMan.AddIncExclPathRegExp(Sections.Names[Counter],ExtValue)
+				else
+					writeln('GroupOption:',GroupName,'/',Sections.Names[Counter],' - Value not RegExp [',ExtValue,']');
+			end
+			else
+				if RegularExpression(ExtValue) then
+				begin
+					ExtensionTypeMan.AddExtensionType(Sections.Names[Counter]);
+					ExtensionTypeMan.AddExtension(ExtValue,Sections.Names[Counter]);
+			  end
+  			else
+				begin
+					Values := TStringList.create();
+					Values.CommaText := Sections.ValueFromIndex[Counter];
+					ExtensionTypeMan.AddExtensionType(Sections.Names[Counter]);
+				  	for SectionIndex := 0 to Pred(Values.count) do
+				  		ExtensionTypeMan.AddExtension('.'+Values.ValueFromIndex[SectionIndex],Sections.Names[Counter]);
+				end;
 		end;
-	end;
 	Sections.free;
 end;
 
@@ -306,7 +320,7 @@ begin
 		try
 			wPaths.Delimiter := ',';
 			wPaths.StrictDelimiter := True;
-			wPaths.Delimitedtext := Sections.ValueFromIndex[Counter];		
+			wPaths.Delimitedtext := Sections.ValueFromIndex[Counter];
 			// Important : Needed for Space in paths
 			for J := 0 to Pred(wPaths.count) do
 				PathAndGroupManager.AddPathName(wPaths[J],Sections.Names[Counter]);
@@ -354,16 +368,16 @@ end;
 
 procedure TAppParams.DumpExtensions();
 begin
-	ExtensionTypeManager.DumpExtensions();	
+	ExtensionTypeManager.DumpExtensions();
 end;
 
 procedure TAppParams.DumpPaths();
 begin
-	PathAndGroupManager.DumpPathsAndGroups();	
+	PathAndGroupManager.DumpPathsAndGroups();
 end;
 
 procedure TAppParams.DumpExtType();
-var i : integer;	
+var i : integer;
 begin
 	writeln('Type extension':25,' = ','Taille':25);
 	for i:= 0 to pred(fReportExtType.count) do
@@ -383,12 +397,24 @@ begin
 		Result := ExtensionTypeManager.GetExtensionType(Fname);
 end;
 
+function TAppParams.GetExceptIncludeRegExp(GName : string) : TExtensionTypeManager;
+begin
+	Result := PathAndGroupManager.GetExceptIncludeRegExp(GName);
+end;
+
 function TAppParams.GetLimitIndex(info : TSearchRec) : Integer;
 var i : integer;
 begin
 	for i:= 0 to pred(fUnity.count) do
 		if info.size <= funity.Values[i] then break;
-	Result := i;	
+	Result := i;
+end;
+
+function TAppParams.IsPathExcluded(Gname : string; Path : String) : boolean;
+begin
+	Result := false;
+	if Assigned(ExcludeIncludeRegExp[GName]) then
+		Result := ExcludeIncludeRegExp[GName].IsPathExcluded(Path);
 end;
 
 function TAppParams.SettingsGetJSON : AnsiString;

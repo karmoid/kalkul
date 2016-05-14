@@ -8,7 +8,7 @@ program kalcul;
   Goals : ability to understand how the files are stored and used in each directory
   =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- }
 
-Uses 
+Uses
 	Classes,
 	PathTree,
 	IniMangt,
@@ -21,7 +21,7 @@ Uses
 	FileInfoSet,
 	InternalTypes,
 	DriveInfoSet,
-	regexpr,	
+	regexpr,
 	Zipper;
 
 Var Tree : TPathTree;
@@ -45,7 +45,7 @@ FileSpec := RootSpec+NewPath+'\';
 if Depth<=0 then
 	KeyFileSpec := RootSpec+'<any>'+'\'
 else
-	KeyFilespec := FileSpec;	
+	KeyFilespec := FileSpec;
 
 if (Depth>0) or (Params.SettingsDrillDown) then
 	begin
@@ -65,11 +65,13 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 	  GroupName := WGpName;
 	if PI.State = tpisConfigured then
 	begin
-		// PI.State := tpisFound;  
+		// PI.State := tpisFound;
 		Depth := Params.SettingsDepth;
 	end;
-
-	If (PI.State in [tpisNone, tpisConfigured]) and 
+	if Params.IsPathExcluded(GroupName,PI.PathName) then
+		PI.State := tpisExcluded
+	else
+	If (PI.State in [tpisNone, tpisConfigured]) and
 	   (FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0) then
 	    begin
 		    Repeat
@@ -148,7 +150,7 @@ begin
 //	Encode:=TEncodingStream.Create(Dest);
 //	Comp:=TCompressionStream.Create(Encode);
 //	Comp.Write(@Buf[1],Length(Buf));
-end;	
+end;
 
 procedure SavePathJSON(fName : String);
 var srcfile : TextFile;
@@ -178,7 +180,7 @@ begin
 //	Encode:=TEncodingStream.Create(Dest);
 //	Comp:=TCompressionStream.Create(Encode);
 //	Comp.Write(@Buf[1],Length(Buf));
-end;	
+end;
 
 
 Var K : Qword;

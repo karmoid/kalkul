@@ -1,8 +1,9 @@
 unit PathsAndGroupsManager;
 
 interface
-uses sysUtils, 
+uses sysUtils,
     SpecificPaths,
+    ExtensionTypeManager,
 	PathGroups;
 
 type TPathsAndGroupsManager = class
@@ -16,12 +17,13 @@ type TPathsAndGroupsManager = class
 		procedure DumpPathsAndGroups();
 		procedure AddPath(Child : String; S: String);
 		procedure AddPathName(Child : String; S: String);
-		procedure AddSpecificGroup(S : String);		
-		procedure AddSpecificPathName(S : String);		
+		procedure AddSpecificGroup(S : String);
+		procedure AddSpecificPathName(S : String);
 		procedure AddSpecificPath(S: string);
 		function FindGroupByPath(S : String) : string;
 		function FindSpecificByPath(S : String) : string;
 		function GetExtensionType(key : string; GName : String): String;
+    function GetExceptIncludeRegExp(GName : String) : TExtensionTypeManager;
 
 		property Paths: TSpecificPaths read fPaths;
 		property PathNames: TSpecificPaths read fPathNames;
@@ -32,8 +34,7 @@ type TPathsAndGroupsManager = class
 	ESpecificPathNotSet = class(Exception);
 
 implementation
-uses InternalTypes,
-	ExtensionTypeManager;
+uses InternalTypes;
 
 constructor TPathsAndGroupsManager.Create();
 begin
@@ -51,26 +52,26 @@ begin
 end;
 
 procedure TPathsAndGroupsManager.AddPath(Child : String; S: String);
-var i : Integer;	
+var i : Integer;
 begin
 	// Writeln('On ajoute le path '+Child+', avec le specificpathname '+S);
 	if PathNames.ReferenceExists(S) then
 	begin
 		Paths.AddSpecificPath(Child,S);
-	end	
-	else	
+	end
+	else
 		raise ESpecificPathNotSet.create('['+S+'] not set.');
-end;	
+end;
 
 procedure TPathsAndGroupsManager.AddPathName(Child : String; S: String);
-var i : Integer;	
+var i : Integer;
 begin
 	// Writeln('On ajoute le specificpathname '+Child+', avec le groupe '+S);
 	if Groups.ReferenceExists(S) then
 		PathNames.AddSpecificPath(Child,S)
-	else	
+	else
 		raise ESpecificPathNameNotSet.create('['+S+'] not set.');
-end;	
+end;
 
 procedure TPathsAndGroupsManager.AddSpecificPathName(S : String);
 begin
@@ -88,12 +89,12 @@ begin
 end;
 
 procedure TPathsAndGroupsManager.DumpPathsAndGroups();
-var i : Integer;	
+var i : Integer;
 begin
 	Writeln;
-	Paths.dumpData('Paths');			
-	PathNames.dumpData('PathNames');			
-	Groups.dumpData('Groups');		
+	Paths.dumpData('Paths');
+	PathNames.dumpData('PathNames');
+	Groups.dumpData('Groups');
 end;
 
 function TPathsAndGroupsManager.FindGroupByPath(S : String) : string;
@@ -119,6 +120,13 @@ begin
 		Extensions := Groups.ExtensionTypeMan(GName);
 		Result := Extensions.GetExtensionType(Key);
 	end;
+end;
+
+function TPathsAndGroupsManager.GetExceptIncludeRegExp(GName : String) : TExtensionTypeManager;
+begin
+  Result := nil;
+	if GName<>'' then
+		Result := Groups.ExtensionTypeMan(GName);
 end;
 
 end.

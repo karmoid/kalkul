@@ -7,7 +7,7 @@ uses Classes,
 
 type
 	tDirectoryStat = class(tStringList)
-	private	
+	private
 		fSize : TUInt64;
 		function GetTypeExtension(Index : Integer) : String;
 		procedure SetTypeExtension(Index : Integer; S : String);
@@ -30,13 +30,13 @@ implementation
 
 constructor tDirectoryStat.Create();
 begin
-	fSize := TUInt64.Create(0);	
+	fSize := TUInt64.Create(0);
 end;
 
-destructor tDirectoryStat.Destroy; 
+destructor tDirectoryStat.Destroy;
 begin
 	fSize.free;
-	inherited Destroy;	
+	inherited Destroy;
 end;
 
 function tDirectoryStat.GetTypeExtension(Index : Integer) : String;
@@ -61,7 +61,7 @@ begin
 	if I <> -1 then
 		Result := Objects[i] as tFileInfoArray
 	else
-		Result := nil;	
+		Result := nil;
 end;
 
 function tDirectoryStat.AddFileStat(info : TSearchRec; LimIndex : Integer; TypeExt : String): UInt64;
@@ -81,7 +81,7 @@ begin
 end;
 
 procedure tDirectoryStat.DumpData;
-var i : Integer;	
+var i : Integer;
 begin
 	for i:=0 to pred(count) do
 		writeln('  TypeExt[',i,'] ',Strings[i],':>',FileInfoFromIndex[i].GetData);

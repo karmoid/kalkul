@@ -5,7 +5,7 @@ uses DirectoryStat,
      InternalTypes;
 
 type
-	tPIState = (tpisNone, tpisConfigured, tpisFound, tpisFilled);
+	tPIState = (tpisNone, tpisConfigured, tpisFound, tpisFilled, tpisExcluded);
 
 	TPathInfo = class
 		private
@@ -20,7 +20,7 @@ type
 			function AddSizeExtension(info : TSearchRec; LimIndex : Integer; TypeExt : String; KeepUnknown: boolean; GpName, SpName : string): UInt64;
 			function dumpData() : AnsiString;
 			function dumpJSON() : AnsiString;
-			class function CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;			
+			class function CompareNode(Item1 : TPathInfo; Item2 : TPathInfo) : Longint;
 			property PathName: WideString read FPathName write FPathName;
 			property State: tPIState read FState write FState;
 			property GroupName: String read FGroupName write FGroupName;
@@ -37,11 +37,11 @@ begin
 	fDirStats := tDirectoryStat.Create();
 end;
 
-destructor TPathInfo.Destroy; 
+destructor TPathInfo.Destroy;
 begin
 	fPathName := '';
 	fDirStats.free;
-	inherited Destroy;	
+	inherited Destroy;
 end;
 
 function TPathInfo.AddSizeExtension(Info : TSearchRec; LimIndex : Integer; TypeExt : String; KeepUnknown: boolean; GpName, SpName : string): UInt64;
@@ -69,7 +69,7 @@ function TPathInfo.dumpData() : AnsiString;
 var i : integer;
 begin
 	Result := 'Path(' + PathName +
-		    ') State(' +  GetEnumName(TypeInfo(tPIState), ord(State)) + 
+		    ') State(' +  GetEnumName(TypeInfo(tPIState), ord(State)) +
 		    ') Size(' + DirStats.Size.FromByteToHR +
 		    ') Specific(' + SpecificName +
 		    ') GroupName(' + GroupName +')';
@@ -83,7 +83,7 @@ begin
 	Result := '{ "Name" : "'+StringReplace(PathName,'\','\\',[rfReplaceAll])+'", '+
               '"Group" : "'+GroupName+'", '+
               '"Specific" : "'+SpecificName+'", '+
-              fDirStats.GetJSON() + 
+              fDirStats.GetJSON() +
               '}';
 end;
 

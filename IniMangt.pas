@@ -28,6 +28,8 @@ type
 		fSettingsDepth :Integer;
 		fSettingsKeepUDetails : Boolean;
 		fSettingsDrillDown : Boolean;
+		fSettingsListFile : string;
+		fLimitDate : TDateTime;
 		//fSpecificPaths : TStringList;
 		fExtensionTypeManager : TExtensionTypeManager;
 		fPathAndGroupManager : TPathsAndGroupsManager;
@@ -60,6 +62,7 @@ type
 		function GetLimitIndex(info : TSearchRec) : Integer;
 		function SettingsGetJSON : AnsiString;
 		function IsPathExcluded(Gname : string; Path : String) : boolean;
+		function IsFileToTrace(info : TSearchRec) : boolean;
 		property Unities: tUnityList read fUnity;
 		property SettingsSrc: WideString read FSettingsSrc write FSettingsSrc;
 		property SettingsDepth: Integer read FSettingsDepth write FSettingsDepth;
@@ -69,6 +72,7 @@ type
 		property SourceSet : tFileInfoSet read fSourceSet;
 		property GroupSet : tFileInfoSet read fGroupSet;
 		property SpecificSet : tFileInfoSet read fSpecificSet;
+		property SettingsListFile : String read fSettingsListFile write fSettingsListFile;
 		property ExcludeIncludeRegExp [GName : String] : TExtensionTypeManager read GetExceptIncludeRegExp;
 
 	end;
@@ -228,6 +232,10 @@ begin
 	SettingsSrc := IniF.ReadString(cSections[tsSettings],'source', 'c');
 	SettingsKeepUDetails := IniF.ReadBool(cSections[tsSettings],'KeepUnknownDetails', False);
 	SettingsDrillDown := IniF.ReadBool(cSections[tsSettings],'drilldown', False);
+	SettingsListFile := IniF.ReadString(cSections[tsSettings],'ListFiles', '');
+	if SettingsListFile<>'' then
+		if not ProcessOneFormula(SettingsListFile,fLimitDate)	then
+			SettingsListFile := '';
 end;
 
 procedure TAppParams.LoadSpecificPath();
@@ -421,12 +429,18 @@ begin
 	end;
 end;
 
+function TAppParams.IsFileToTrace(info : TSearchRec) : boolean;
+begin
+  Result := (SettingsListFile<>'') and (IsFileNewer(info,fLimitDate));
+end;
+
 function TAppParams.SettingsGetJSON : AnsiString;
 begin
 	Result := '"DrillDown": "'+cTrueFalse[SettingsDrillDown]+'", '+
 			  '"KeepUnknownDetails": "'+cTrueFalse[SettingsKeepUDetails]+'", '+
 			  '"Depth": "'+IntToStr(SettingsDepth)+'", '+
-			  '"Sources": "'+SettingsSrc+'"';
+			  '"Sources": "'+SettingsSrc+'",'+
+				'"ListFiles": "'+SettingsListFile+'"';
 end;
 
 end.

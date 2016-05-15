@@ -1,6 +1,6 @@
 program kalcul;
 { =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  Marc CHAUFFOUR - january 2015
+  Marc CHAUFFOUR - may 2016
   Personal project - maybe used on Rooms estimates
 
   kalkul : Volume estimation / update view
@@ -27,11 +27,47 @@ Uses
 Var Tree : TPathTree;
 	i,imax : Integer;
 	Params : TAppParams;
-    Src : String;
-    Start : TdateTime;
-    DInfoSet : tDriveInfoSet;
+  Src : String;
+  Start : TdateTime;
+  DInfoSet : tDriveInfoSet;
+	ListFile : TextFile;
+	Ident : Integer;
 
 Const cIniFile = 'kalkul.ini';
+
+procedure PrepareListFile(Active : Boolean);
+var Ordinateur : string;
+var ts : string;
+begin
+	if Active then
+	begin
+		ts := getTimeStampString();
+		Ordinateur := GetComputerNetName;
+		assignfile(ListFile, Ordinateur+'_'+ts+'.csv');
+		rewrite(ListFile);
+		writeln(ListFile,'ident;path;conteneur;filename;taille;created;accessed;modified;end');
+	end;
+end;
+
+procedure TerminateListFile(Active : Boolean);
+begin
+	if Active then closefile(ListFile);
+end;
+
+procedure DumpInfoListFile(Info : TSearchRec; Pi : tPathInfo; CurrentPath : String);
+begin
+	if Params.IsFileToTrace(Info) then
+	begin
+		Ident := Ident + 1;
+		with Info do
+		begin
+			writeln(ListFile,Ident,';',pi.PathName,';',CurrentPath,';',Name,';',
+							Size,';',DateTime2XMLDateTimeNoTZ(FileTimeToDTime(FindData.ftCreationTime)),';',
+							DateTime2XMLDateTimeNoTZ(FileTimeToDTime(FindData.ftLastAccessTime)),';',
+							DateTime2XMLDateTimeNoTZ(FileTimeToDTime(FindData.ftLastWriteTime)),';*');
+		end;
+	end;
+end;
 
 function ProcessTree(Src, RootSpec, NewPath : string; Depth: Integer; GroupName : String): Cardinal;
 Var Info : TSearchRec;
@@ -89,6 +125,7 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 			        end
 			    else
 				    begin
+							DumpInfoListFile(Info,PI,NewPath);
 				    	// remplacer Ext par ExtractFileExt(Info.Name)
 				    	// Params.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
 				    	// PI Gère un Item
@@ -196,11 +233,13 @@ var free_size, total_size: Int64;
 Begin
 	Start := now;
 	Params := TAppParams.create(cIniFile);
-  	Regex := TRegExpr.Create;
-  	DInfoSet := tDriveInfoSet.create;
+	Regex := TRegExpr.Create;
+	DInfoSet := tDriveInfoSet.create;
+  writeln(Params.SettingsGetJSON);
+	PrepareListFile(Params.SettingsListFile<>'');
 
 	//Params.DumpPaths;
-  	Tree := PopulateTree;
+	Tree := PopulateTree;
 	imax := WordCount(Params.SettingsSrc,[',']);
 	for i := 1 to imax do
 	begin
@@ -224,6 +263,8 @@ Begin
 			Writeln(IntToStr(ProcessTree(Src[1],Copy(Src,1,Pred(length(Src))),'',Params.SettingsDepth,'')) + ' files');
 		end;
 	end;
+
+	TerminateListFile(Params.SettingsListFile<>'');
 
 	SaveJSON('sources',Params.SourceSet);
 	SaveJSON('groupes',Params.GroupSet);

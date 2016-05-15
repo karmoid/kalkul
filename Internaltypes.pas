@@ -65,9 +65,14 @@ function NormalizePath(S : String) : String;
 function GetComputerNetName: string;
 function XMLDateTime2DateTime(const XMLDateTime: AnsiString): TDateTime;
 function DateTime2XMLDateTime(const vDateTime: TDateTime): AnsiString;
+function DateTime2XMLDateTimeNoTZ(const vDateTime: TDateTime): AnsiString;
 function RegularExpression(ExtValue : AnsiString): Boolean;
 function GetExtensionTypeFromRegExp(ExtValue : AnsiString; fName : AnsiString; GName : AnsiString) : Ansistring;
 function GetDiskSize(drive: Char; var free_size, total_size: Int64): Boolean;
+function ProcessOneFormula(Buffer : string; var currentDate : TDateTime) : Boolean;
+Procedure ExploitInfo(Info : TSearchRec; var CDT,ADT,MDT : TDateTime; var SZ : UInt64);
+Function IsFileNewer(Info : TSearchRec; TestDate : TDateTime)	: boolean;
+function FileTimeToDTime(FTime: TFileTime): TDateTime;
 
 
 const virguleLast : array[Boolean] of string = ('',',');
@@ -81,6 +86,50 @@ var Regex: TRegExpr;
 implementation
 uses DateUtils,
      StrUtils;
+
+type
+// TYpe de base de calcul
+ baseType = (
+   btYesterday,
+   btToday,
+   btTomorow,
+   btWeekstart,
+   btWeekend,
+   btMonthstart,
+   btMonthend,
+   btYearstart,
+   btYearend
+ );
+
+ incType = (
+   itDay,
+   itWeek,
+   itMonth,
+   itYear
+ );
+
+const
+ basetypelib : array[basetype] of string =
+ (
+   'yesterday',
+   'today',
+   'tomorrow',
+   'weekstart',
+   'weekend',
+   'monthstart',
+   'monthend',
+   'yearstart',
+   'yearend'
+ );
+
+ incTypeLib : array[incType] of string =
+ (
+   'day',
+   'week',
+   'month',
+   'year'
+ );
+
 
 function GetDiskSize(drive: Char; var free_size, total_size: Int64): Boolean;
 var
@@ -189,6 +238,13 @@ begin
 	Result := FormatDateTime(cIntlDateTimeStor,vDateTime)+' '+Signs[Offset div abs(offset)]+Format('%.4d',[offset div 60*-100]);
 end;
 
+function DateTime2XMLDateTimeNoTZ(const vDateTime: TDateTime): AnsiString;
+var offset : integer;
+const Signs : array[-1..1] of char = ('+',' ','-');
+begin
+	Result := FormatDateTime(cIntlDateTimeStor,vDateTime);
+end;
+
 function FileTimeToDTime(FTime: TFileTime): TDateTime;
 var
   LocalFTime: TFileTime;
@@ -207,6 +263,14 @@ begin
 		ADT := FileTimeToDTime(FindData.ftLastAccessTime);
 		MDT := FileTimeToDTime(FindData.ftLastWriteTime);
 		SZ := Size;
+	end;
+end;
+
+Function IsFileNewer(Info : TSearchRec; TestDate : TDateTime)	: boolean;
+begin
+	with info do
+	begin
+		Result := FileTimeToDTime(FindData.ftLastWriteTime) >= TestDate;
 	end;
 end;
 
@@ -487,5 +551,186 @@ begin
 	Result := LowerCase(S);
 	if Result[Length((Result))]<>'\' then Result := Result + '\';
 end;
+
+function ProcessOneFormula(Buffer : string; var currentDate : TDateTime) : Boolean;
+var
+  btIter : baseType;
+  itIter : incType;
+  Year, Month, Day, dow : word;
+  wMonth : Integer;
+  DoIt : Boolean;
+  Signe : Integer;
+  Value : Integer;
+  Code,Code2 : Integer;
+
+begin
+  DoIt := False;
+  currentDate := Now;
+  for btIter := Low(baseType) to High(baseType) do
+  begin
+    // writeln('Item ' + IntToStr(Ord(btIter)) + ' - ' + baseTypeLib[btIter] + '.');
+    if (not DoIt) and
+       (copy(lowercase(Buffer),1,length(baseTypeLib[btIter]))=baseTypeLib[btIter]) and
+       (
+        (length(Buffer) = length(baseTypeLib[btIter])) or
+        (Buffer[Succ(length(baseTypeLib[btIter]))] in ['+','-'])
+       ) then
+    begin
+      Delete(Buffer,1,length(baseTypeLib[btIter]));
+      // writeln('found: ' + IntToStr(Ord(btIter)) + ' - ' + baseTypeLib[btIter] + '.');
+      DoIt := True;
+      case btIter of
+        btYesterday:
+          CurrentDate := Now - 1;
+        btToday:
+          CurrentDate := Now;
+        btTomorow:
+          CurrentDate := Now + 1;
+        btWeekstart:
+        begin
+          dow := DayOfWeek(Now)-1;
+          if dow=0 then
+            dow := 7;
+          CurrentDate := Now - dow + 1;
+        end;
+        btWeekend:
+        begin
+          dow := DayOfWeek(Now)-1;
+          if dow=0 then
+            dow := 7;
+          CurrentDate := Now + 7- dow;
+        end;
+        btMonthstart:
+        begin
+          DecodeDate(Now, Year, Month, Day);
+          CurrentDate := EncodeDate(Year, Month, 1);
+        end;
+        btMonthend:
+        begin
+          DecodeDate(Now, Year, Month, Day);
+          CurrentDate := EncodeDate(Year, Month, 28) + 4;
+          DecodeDate(CurrentDate, Year, Month, Day);
+          CurrentDate := EncodeDate(Year, Month, 1)-1;
+        end;
+        btYearstart:
+        begin
+          DecodeDate(Now, Year, Month, Day);
+          CurrentDate := EncodeDate(Year, 01, 01);
+        end;
+        btYearend:
+        begin
+          DecodeDate(Now, Year, Month, Day);
+          CurrentDate := EncodeDate(Year, 12, 31);
+        end;
+      end;
+    end;
+  end;
+  if DoIt then
+  begin
+    // WriteLn('Date en cours : ' + FormatDateTime('dd/mm/yyyy', CurrentDate));
+    if Length(Buffer)>0 then
+    begin
+      Signe := 0;
+      case Buffer[1] of
+        '-' : Signe := -1;
+        '+' : Signe := 1;
+        else DoIt := False;
+      end;
+      if DoIt then
+      begin
+        Delete(Buffer,1,1);
+        Val(Buffer,Value,Code);
+        if Code=0 then
+        begin
+          Buffer:=incTypeLib[itDay];
+        end
+        else
+        begin
+          val(copy(Buffer,1,Pred(Code)),Value,Code2);
+          Delete(Buffer,1,Pred(Code));
+        end;
+        DoIt := False;
+        for itIter := Low(incType) to High(incType) do
+        begin
+          if (not DoIt) and
+             (
+              (copy(lowercase(Buffer),1,length(incTypeLib[itIter]))=incTypeLib[itIter]) or
+              (
+               (length(Buffer) = 1) and
+               (LowerCase(Buffer[1]) = incTypeLib[itIter][1])
+              )
+             ) then
+          begin
+            DoIt := True;
+            case itIter of
+              itDay:
+              begin
+                CurrentDate := currentDate + (Signe*Value);
+              end;
+              itMonth :
+              begin
+                DecodeDate(currentDate, Year, Month, Day);
+                writeln('on a decode la date ', Year, Month, Day);
+                while (Value>=12) do
+                begin
+                  Year := Year + Signe;
+                  Value := Value - 12;
+                  writeln('on a soustrait 12 mois ', Year, Month, Day);
+                end;
+                wMonth := Month;
+                wMonth := wMonth + Signe*Value;
+                case Signe of
+                  1  :
+                  begin
+                    if wMonth>12 then
+                    begin
+                      wMonth := wMonth - 12;
+                      Year := Year + 1;
+                    end;
+                  end;
+                  -1 :
+                  begin
+                    if wMonth<1 then
+                    begin
+                      wMonth := wMonth + 12;
+                      Year := Year - 1;
+                    end;
+                  end;
+                end;
+                Month := wMonth;
+                CurrentDate := EncodeDate(Year, Month, Day);
+                writeln('on a encode la date ', Year, Month, Day);
+              end;
+              itWeek :
+              begin
+                CurrentDate := currentDate + (Signe*Value*7);;
+              end;
+              itYear :
+              begin
+                DecodeDate(currentDate, Year, Month, Day);
+                CurrentDate := EncodeDate(Year + (Signe*Value), Month, Day);
+              end;
+            end;
+          end;
+        end;
+      end
+      else
+      begin
+        writeLn('Operateur non reconnu.');
+      end;
+    end;
+    Result := DoIt;
+    if not DoIt then
+    begin
+      writeLn('Increment non reconnu.');
+    end;
+  end
+  else
+  begin
+    writeLn('Base date non reconnue.');
+    Result := False;
+  end;
+end;
+
 
 end.

@@ -108,7 +108,7 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 	if Params.IsPathExcluded(GroupName,PI.PathName) then
   begin
 		PI.State := tpisExcluded;
-		writeln(PI.PathName,' Excluded');
+		// writeln(PI.PathName,' Excluded');
 	end;
 	If (PI.State in [tpisNone, tpisConfigured, tpisExcluded]) and
 	   (FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0) then

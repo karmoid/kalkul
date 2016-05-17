@@ -106,12 +106,11 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 	end;
 	// writeln('on traite le path '+PI.PathName);
 	if Params.IsPathExcluded(GroupName,PI.PathName) then
-		begin
+  begin
 		PI.State := tpisExcluded;
 		writeln(PI.PathName,' Excluded');
-		end
-	else
-	If (PI.State in [tpisNone, tpisConfigured]) and
+	end;
+	If (PI.State in [tpisNone, tpisConfigured, tpisExcluded]) and
 	   (FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0) then
 	    begin
 		    Repeat
@@ -123,7 +122,7 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 	//			        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec+Name+'\',Depth-1,GroupName);
 				        if Name[1] <> '.' then Count := Count + ProcessTree(Src,FileSpec,Name,Depth-1,GroupName);
 			        end
-			    else
+			    else if pi.state<>tpisExcluded then
 				    begin
 							DumpInfoListFile(Info,PI,NewPath);
 				    	// remplacer Ext par ExtractFileExt(Info.Name)
@@ -138,10 +137,11 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 				    	Params.SpecificSet.AddSizeFromInfo(Info,LimIndex,TypeExt,WSpecific); // gère x Items
 				    	PI.AddSizeExtension(Info,LimIndex,TypeExt,Params.SettingsKeepUDetails,GroupName,WSpecific);
 			    	end;
-				end;
+				  end;
 		    Until FindNext(info)<>0;
-		FindClose(Info);
-		PI.state := tpisFilled;
+				FindClose(Info);
+				if PI.state <> tpisExcluded then
+					PI.state := tpisFilled;
 	    end;
 	end;
 Result := Count;

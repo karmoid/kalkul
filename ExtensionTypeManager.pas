@@ -110,9 +110,8 @@ begin
 		with ExceptAndIncludeExpr do
     begin
       Exclude := Names[i][1] = '-';
-      // Writeln('RegExp donne '+GetExtensionTypeFromRegExp(ValueFromIndex[i],Path,''));
       Found := GetExtensionTypeFromRegExp(ValueFromIndex[i],Path,GName)<>'';
-      // DumpIt := DumpIt or Found;
+      DumpIt := DumpIt or Found;
       If Found then
         Result := Exclude;
         // Writeln(ValueFromIndex[i]:60,cTrueFalse[Found]:8, cTrueFalse[Exclude]:8);

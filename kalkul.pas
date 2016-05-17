@@ -110,8 +110,9 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 		PI.State := tpisExcluded;
 		// writeln(PI.PathName,' Excluded');
 	end;
-	If (PI.State in [tpisNone, tpisConfigured, tpisExcluded]) and
-	   (FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0) then
+	If (PI.State in [tpisNone, tpisConfigured,tpisExcluded]) and
+		 ((PI.State <> tpisExcluded) or (not Params.SettingsExclFullDir)) and
+  	 (FindFirst (FileSpec+'*',faAnyFile and faDirectory, Info)=0) then
 	    begin
 		    Repeat
 		    	Inc(Count);

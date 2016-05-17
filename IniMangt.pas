@@ -30,6 +30,7 @@ type
 		fSettingsDrillDown : Boolean;
 		fSettingsListFile : string;
 		fLimitDate : TDateTime;
+		fSettingsExclFullDir : Boolean; // Sur les règles d'exclusion, continue-t-on de traverser le contenu du répertoire ?
 		//fSpecificPaths : TStringList;
 		fExtensionTypeManager : TExtensionTypeManager;
 		fPathAndGroupManager : TPathsAndGroupsManager;
@@ -73,6 +74,7 @@ type
 		property GroupSet : tFileInfoSet read fGroupSet;
 		property SpecificSet : tFileInfoSet read fSpecificSet;
 		property SettingsListFile : String read fSettingsListFile write fSettingsListFile;
+		property SettingsExclFullDir : boolean read fSettingsExclFullDir write fSettingsExclFullDir;
 		property ExcludeIncludeRegExp [GName : String] : TExtensionTypeManager read GetExceptIncludeRegExp;
 
 	end;
@@ -231,6 +233,7 @@ begin
 	SettingsDepth := IniF.ReadInteger(cSections[tsSettings],'depth', 3);
 	SettingsSrc := IniF.ReadString(cSections[tsSettings],'source', 'c');
 	SettingsKeepUDetails := IniF.ReadBool(cSections[tsSettings],'KeepUnknownDetails', False);
+	SettingsExclFullDir := IniF.ReadBool(cSections[tsSettings],'ExcludeFullDir', False);
 	SettingsDrillDown := IniF.ReadBool(cSections[tsSettings],'drilldown', False);
 	SettingsListFile := IniF.ReadString(cSections[tsSettings],'ListFiles', '');
 	if SettingsListFile<>'' then

@@ -32,6 +32,7 @@ Var Tree : TPathTree;
   DInfoSet : tDriveInfoSet;
 	ListFile : TextFile;
 	Ident : Integer;
+	OurZipper :TZipper;
 
 Const cIniFile = 'kalkul.ini';
 
@@ -65,6 +66,47 @@ begin
 							Size,';',DateTime2XMLDateTimeNoTZ(FileTimeToDTime(FindData.ftCreationTime)),';',
 							DateTime2XMLDateTimeNoTZ(FileTimeToDTime(FindData.ftLastAccessTime)),';',
 							DateTime2XMLDateTimeNoTZ(FileTimeToDTime(FindData.ftLastWriteTime)),';*');
+		end;
+	end;
+end;
+
+procedure PrepareZipFile(Active : Boolean);
+var Ordinateur : string;
+var ts : string;
+begin
+	if Active then
+	begin
+		ts := getTimeStampString();
+		Ordinateur := GetComputerNetName;
+		OurZipper := TZipper.Create;
+	  OurZipper.FileName := IncludeTrailingPathDelimiter(Params.SettingsCopyTarget)+Ordinateur+'_'+ts+'.zip';
+	end;
+end;
+
+procedure TerminateZipFile(Active : Boolean);
+	begin
+		if Active then
+    begin
+			writeln('writing ',OurZipper.Entries.count,' file(s) to ',OurZipper.FileName);
+			OurZipper.ZipAllFiles;
+			OurZipper.Free;
+    end;
+	end;
+
+procedure CopyTreeDirFile(Info : TSearchRec; Pi : tPathInfo; CurrentPath : String);
+var ADiskFileName : string;
+var AArchiveFileName :String;
+begin
+	if Params.IsFileToCopy(Info) then
+	begin
+		with Info do
+		begin
+			  ADiskFileName:=pi.PathName+Name;
+			  AArchiveFileName:=StringReplace(pi.PathName+Name,extractfiledrive(pi.PathName)+'\','',[rfReplaceall]);
+			  // AArchiveFileName:=SysToUTF8(AArchiveFileName);
+			  // AArchiveFileName:=UTF8ToCP866(AArchiveFileName);
+				// writeln('zip ',ADiskFileName,' to ',AArchiveFileName);
+			  OurZipper.Entries.AddFileEntry(ADiskFileName,AArchiveFileName);
 		end;
 	end;
 end;
@@ -126,6 +168,7 @@ if (Depth>0) or (Params.SettingsDrillDown) then
 			    else if pi.state<>tpisExcluded then
 				    begin
 							DumpInfoListFile(Info,PI,NewPath);
+							CopyTreeDirFile(Info,PI,NewPath);
 				    	// remplacer Ext par ExtractFileExt(Info.Name)
 				    	// Params.AddSizeExtension(ExtractFileExt(Name),Info,Params.SettingsKeepUDetails,GroupName);
 				    	// PI Gère un Item
@@ -238,6 +281,7 @@ Begin
 	DInfoSet := tDriveInfoSet.create;
   writeln(Params.SettingsGetJSON);
 	PrepareListFile(Params.SettingsListFile<>'');
+	PrepareZipFile(Params.SettingsCopyTreeDir<>'');
 
 	//Params.DumpPaths;
 	Tree := PopulateTree;
@@ -266,6 +310,7 @@ Begin
 	end;
 
 	TerminateListFile(Params.SettingsListFile<>'');
+	TerminateZipFile(Params.SettingsCopyTreeDir<>'');
 
 	SaveJSON('sources',Params.SourceSet);
 	SaveJSON('groupes',Params.GroupSet);

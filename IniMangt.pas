@@ -30,6 +30,9 @@ type
 		fSettingsDrillDown : Boolean;
 		fSettingsListFile : string;
 		fLimitDate : TDateTime;
+		fSettingsCopyTreeDir : string;
+		fSettingsCopyTarget : string;
+		fLimitCopy : TdateTime;
 		fSettingsExclFullDir : Boolean; // Sur les règles d'exclusion, continue-t-on de traverser le contenu du répertoire ?
 		//fSpecificPaths : TStringList;
 		fExtensionTypeManager : TExtensionTypeManager;
@@ -64,6 +67,7 @@ type
 		function SettingsGetJSON : AnsiString;
 		function IsPathExcluded(Gname : string; Path : String) : boolean;
 		function IsFileToTrace(info : TSearchRec) : boolean;
+		function IsFileToCopy(info : TSearchRec) : boolean;
 		property Unities: tUnityList read fUnity;
 		property SettingsSrc: WideString read FSettingsSrc write FSettingsSrc;
 		property SettingsDepth: Integer read FSettingsDepth write FSettingsDepth;
@@ -74,6 +78,8 @@ type
 		property GroupSet : tFileInfoSet read fGroupSet;
 		property SpecificSet : tFileInfoSet read fSpecificSet;
 		property SettingsListFile : String read fSettingsListFile write fSettingsListFile;
+		property SettingsCopyTreeDir : String read fSettingsCopyTreeDir write fSettingsCopyTreeDir;
+		property SettingsCopyTarget : String read fSettingsCopyTarget write fSettingsCopyTarget;
 		property SettingsExclFullDir : boolean read fSettingsExclFullDir write fSettingsExclFullDir;
 		property ExcludeIncludeRegExp [GName : String] : TExtensionTypeManager read GetExceptIncludeRegExp;
 
@@ -239,6 +245,11 @@ begin
 	if SettingsListFile<>'' then
 		if not ProcessOneFormula(SettingsListFile,fLimitDate)	then
 			SettingsListFile := '';
+	SettingsCopyTreeDir := IniF.ReadString(cSections[tsSettings],'CopyTreeDir', '');
+	if SettingsCopyTreeDir<>'' then
+		if not ProcessOneFormula(SettingsCopyTreeDir,fLimitCopy)	then
+			SettingsCopyTreeDir := '';
+	SettingsCopyTarget := IniF.ReadString(cSections[tsSettings],'CopyTarget', '');
 end;
 
 procedure TAppParams.LoadSpecificPath();
@@ -435,6 +446,11 @@ end;
 function TAppParams.IsFileToTrace(info : TSearchRec) : boolean;
 begin
   Result := (SettingsListFile<>'') and (IsFileNewer(info,fLimitDate));
+end;
+
+function TAppParams.IsFileToCopy(info : TSearchRec) : boolean;
+begin
+  Result := (SettingsCopyTreeDir<>'') and (IsFileNewer(info,fLimitCopy));
 end;
 
 function TAppParams.SettingsGetJSON : AnsiString;

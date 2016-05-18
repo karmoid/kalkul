@@ -2,7 +2,7 @@ unit ExtensionTypeManager;
 
 interface
 uses sysUtils,
-    Extensions,
+  Extensions,
 	ExtensionTypes,
 	RegExpressions;
 
